@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": false,
   "main": "app.js",
-  "repository": "git@github.com:ctc-uci/npo-backend-template.git",
+  "repository": "git@github.com:ctc-uci/the-literacy-project-backend.git",
   "author": "CTC <ctc@uci.edu>",
   "license": "MIT",
   "scripts": {
