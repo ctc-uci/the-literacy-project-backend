@@ -1,14 +1,27 @@
 const { Router } = require('express');
+const pool = require('../server/db');
 
 const router = Router();
 
-//  post
+// Get
+
+/*
+router.get('', async (req, res) => {
+
+});
+*/
+
+// post
 router.post('/reset-password', async (req, res) => {
   try {
-    const { pwd } = req.body;
-    console.log(pwd);
-    res.json(pwd);
-    // const replacePwd = pool
+    // INSERT INTO tlp_user(username) VALUES ('hello');
+    const userInfo = req.body; // input all required fields of tlp_user table
+    console.log(userInfo);
+    const newUser = await pool.query(
+      'INSERT INTO tlp_user (username, password, position) VALUES($1,$2,$3) RETURNING *',
+      [userInfo.username, userInfo.password, userInfo.position],
+    );
+    res.json(newUser.rows[0]);
   } catch (err) {
     console.log(err.message);
   }

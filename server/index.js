@@ -2,12 +2,12 @@ const express = require('express');
 
 const app = express();
 const cors = require('cors');
-// const pool = require('./db');
 const loginRouter = require('../routes/login');
 const dashboardRouter = require('../routes/dashboard');
 const settingsRouter = require('../routes/settings');
 const teachersRouter = require('../routes/teachers');
 const schoolsRouter = require('../routes/schools');
+const schoolDistrictsRouter = require('../routes/schoolDistricts');
 
 app.listen(5000, () => {
   console.log('Server has started on port 5000');
@@ -24,3 +24,7 @@ app.use('/login', loginRouter);
 app.use('/settings', settingsRouter);
 app.use('/teachers', teachersRouter);
 app.use('/schools', schoolsRouter);
+app.use('/schoolDistricts', schoolDistrictsRouter);
+
+// school district
+// schools
