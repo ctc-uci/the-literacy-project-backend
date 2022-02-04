@@ -50,7 +50,9 @@ CREATE TABLE student (
     CONSTRAINT site_id FOREIGN KEY(site_id)
       REFERENCES site(site_id),
     home_teacher VARCHAR(255),
-    student_groups INT[],
+    student_group INT[],
+    CONSTRAINT student_group FOREIGN KEY(group_id)
+      REFERENCES student_group(area_id)
     pretest_r INT[],
     posttest_r INT[],
     pretest_a INT[],
