@@ -6,8 +6,8 @@ const loginRouter = require('../routes/login');
 const dashboardRouter = require('../routes/dashboard');
 const settingsRouter = require('../routes/settings');
 const teachersRouter = require('../routes/teachers');
-const schoolsRouter = require('../routes/schools');
-const schoolDistrictsRouter = require('../routes/schoolDistricts');
+const sitesRouter = require('../routes/sites');
+const areasRouter = require('../routes/areas');
 
 app.listen(5000, () => {
   console.log('Server has started on port 5000');
@@ -23,8 +23,8 @@ app.use('/dashboard', dashboardRouter);
 app.use('/login', loginRouter);
 app.use('/settings', settingsRouter);
 app.use('/teachers', teachersRouter);
-app.use('/schools', schoolsRouter);
-app.use('/schoolDistricts', schoolDistrictsRouter);
+app.use('/sites', sitesRouter);
+app.use('/areas', areasRouter);
 
 // school district
 // schools
