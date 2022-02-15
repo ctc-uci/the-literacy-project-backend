@@ -18,8 +18,16 @@ router.post('/reset-password', async (req, res) => {
     const userInfo = req.body; // input all required fields of tlp_user table
     console.log(userInfo);
     const newUser = await pool.query(
-      'INSERT INTO tlp_user (username, password, position) VALUES($1,$2,$3) RETURNING *',
-      [userInfo.username, userInfo.password, userInfo.position],
+      'INSERT INTO tlp_user (username, password, position, first_name, last_name, phone_number, active) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [
+        userInfo.username,
+        userInfo.password,
+        userInfo.position,
+        userInfo.first_name,
+        userInfo.last_name,
+        userInfo.phone_number,
+        userInfo.active,
+      ],
     );
     res.json(newUser.rows[0]);
   } catch (err) {

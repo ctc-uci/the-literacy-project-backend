@@ -1,67 +1,80 @@
 CREATE DATABASE tlp;
 
-CREATE TYPE pos AS ENUM('admin', 'master teacher');
+CREATE TYPE pos AS ENUM('admin', 'master teacher', 'home teacher');
 CREATE TYPE season AS ENUM('winter', 'spring', 'summer', 'fall');
+CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
 
 CREATE TABLE tlp_user (
   user_id SERIAL PRIMARY KEY,
-  username VARCHAR(255) UNIQUE,
-  password VARCHAR(255),
-  position pos,
-  first_name VARCHAR(255),
-  last_name VARCHAR(255)
+  email VARCHAR(50) NOT NULL,
+  position pos NOT NULL,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  phone_number VARCHAR(15) NOT NULL,
+  active user_status NOT NULL
 );
 
 
-CREATE TABLE administrator (
-  admin_id SERIAL PRIMARY KEY,
+-- CREATE TABLE administrator (
+--   admin_id SERIAL PRIMARY KEY,
 
-);
+-- );
 
 CREATE TABLE master_teacher (
-  master_id SERIAL PRIMARY KEY,
+  teacher_id SERIAL PRIMARY KEY REFERENCES tlp_user(user_id) ON DELETE CASCADE,
+  -- area INT REFERENCES area(area_id) NOT NULL,
+  sites INT[]
 );
 
 
-CREATE TABLE school (
-    school_id SERIAL PRIMARY KEY,
-    school_name VARCHAR(255),
-    district_id INT,
-    CONSTRAINT district_id FOREIGN KEY(district_id)
-      REFERENCES school_district(district_id)
+CREATE TABLE site (
+    site_id SERIAL PRIMARY KEY,
+    site_name VARCHAR(255) NOT NULL,
+    address_street VARCHAR(255) NOT NULL,
+    address_city VARCHAR(255) NOT NULL,
+    address_zip VARCHAR(5) NOT NULL,
+    area_id INT REFERENCES area(area_id) ON DELETE CASCADE NOT NULL,
+    p_first_name VARCHAR(255) NOT NULL,
+    p_last_name VARCHAR(255) NOT NULL,
+    p_title VARCHAR(255) NOT NULL,
+    p_phone_num VARCHAR(15) NOT NULL,
+    p_email VARCHAR(255) NOT NULL,
+    s_first_name VARCHAR(255),
+    s_last_name VARCHAR(255),
+    s_title VARCHAR(255),
+    s_phone_num VARCHAR(15),
+    s_email VARCHAR(255) NOT NULL,
+    notes VARCHAR(255),
+    -- CONSTRAINT area_id FOREIGN KEY(area_id)
+    --   REFERENCES area(area_id)
+    --   ON DELETE CASCADE
 );
 
-CREATE TABLE school_district(
-  district_id SERIAL PRIMARY KEY,
-  district_name VARCHAR(255)
+CREATE TABLE area (
+  area_id SERIAL PRIMARY KEY,
+  area_name VARCHAR(255) NOT NULL,
+  active BOOLEAN NOT NULL
 );
 
 CREATE TABLE student (
     student_id SERIAL PRIMARY KEY,
-    school_id INT,
+    home_teacher INT REFERENCES tlp_user(user_id) NOT NULL,
     first_name VARCHAR(255),
     last_name VARCHAR(255),
-    CONSTRAINT school_id FOREIGN KEY(school_id)
-            REFERENCES school(school_id),
-    home teacher VARCHAR(255),
-    student_groups INT[],
-    Pre-Test Reading Attitudes INT,
-    Post-Test Reading Attitudes INT,
-    Pre-Test Assessment Scores INT,
-    Post-Test Assessment Scores INT,
+    site_id INT REFERENCES site(site_id) NOT NULL,
+    student_group INT REFERENCES student_group(group_id) NOT NULL,
+    pretest_r INT[],
+    posttest_r INT[],
+    pretest_a INT[],
+    posttetst_a INT[]
 );
 
 CREATE TABLE student_group (
-  group_id SERIAL,
-  year INT,
-  PRIMARY KEY (group_id, yr),
-  master_id INT,
-  CONSTRAINT master_id FOREIGN KEY(master_id)
-    REFERENCES master_teacher(master_id),
-  cycle season,
-  students INT[],
-  CONSTRAINT school_id
-      FOREIGN KEY(school_id)
-          REFERENCES school(school_id),
-  meeting_time DATE
+  group_id SERIAL PRIMARY KEY,
+  year INT NOT NULL,
+  cycle season NOT NULL,
+  master_teacher INT REFERENCES master_teacher(teacher_id) NOT NULL,
+  students INT[] NOT NULL,
+  site_id INT REFERENCES site(site_id) NOT NULL,
+  meeting_time DATE NOT NULL
 );
