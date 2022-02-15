@@ -1,9 +1,11 @@
-CREATE DATABASE tlp;
-
+DROP TYPE pos CASCADE;
+DROP TYPE season CASCADE;
+DROP TYPE user_status CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher', 'home teacher');
 CREATE TYPE season AS ENUM('winter', 'spring', 'summer', 'fall');
 CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
 
+DROP TABLE tlp_user CASCADE;
 CREATE TABLE tlp_user (
   user_id SERIAL PRIMARY KEY,
   email VARCHAR(50) NOT NULL,
@@ -20,13 +22,14 @@ CREATE TABLE tlp_user (
 
 -- );
 
+DROP TABLE master_teacher CASCADE;
 CREATE TABLE master_teacher (
   teacher_id SERIAL PRIMARY KEY REFERENCES tlp_user(user_id) ON DELETE CASCADE,
-  -- area INT REFERENCES area(area_id) NOT NULL,
   sites INT[]
 );
+  -- area INT REFERENCES area(area_id) NOT NULL,
 
-
+DROP TABLE site CASCADE;
 CREATE TABLE site (
     site_id SERIAL PRIMARY KEY,
     site_name VARCHAR(255) NOT NULL,
@@ -44,18 +47,20 @@ CREATE TABLE site (
     s_title VARCHAR(255),
     s_phone_num VARCHAR(15),
     s_email VARCHAR(255) NOT NULL,
-    notes VARCHAR(255),
+    notes VARCHAR(255)
+);
     -- CONSTRAINT area_id FOREIGN KEY(area_id)
     --   REFERENCES area(area_id)
     --   ON DELETE CASCADE
-);
 
+DROP TABLE area CASCADE;
 CREATE TABLE area (
   area_id SERIAL PRIMARY KEY,
   area_name VARCHAR(255) NOT NULL,
   active BOOLEAN NOT NULL
 );
 
+DROP TABLE student CASCADE;
 CREATE TABLE student (
     student_id SERIAL PRIMARY KEY,
     home_teacher INT REFERENCES tlp_user(user_id) NOT NULL,
@@ -69,6 +74,7 @@ CREATE TABLE student (
     posttetst_a INT[]
 );
 
+DROP TABLE student_group CASCADE;
 CREATE TABLE student_group (
   group_id SERIAL PRIMARY KEY,
   year INT NOT NULL,
