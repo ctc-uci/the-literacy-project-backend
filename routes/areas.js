@@ -3,27 +3,28 @@ const pool = require('../server/db');
 
 const router = Router();
 
+// works
 router.post('/create', async (req, res) => {
   try {
-    const schoolDistrictName = req.body.district_name;
-    console.log(schoolDistrictName);
-    const newSchoolDistrict = await pool.query(
-      'INSERT INTO school_district (district_name) VALUES($1) RETURNING *',
-      [schoolDistrictName],
+    const areaInfo = req.body;
+    console.log(areaInfo);
+    const newArea = await pool.query(
+      'INSERT INTO area (area_name, active) VALUES($1,$2) RETURNING *',
+      [areaInfo.area_name, areaInfo.active],
     );
-    res.json(newSchoolDistrict);
-    // console.log(id);
+    res.json(newArea.rows[0]);
   } catch (err) {
     console.error(err.message);
   }
 });
 
-router.get('', async (req, res) => {
+// Works!
+router.get('/:id', async (req, res) => {
   try {
-    console.log('hello');
-    const allSchools = await pool.query('SELECT * FROM school_district');
-    res.json(allSchools.rows);
-    // const { school_id } = req.body.school_id
+    const areaId = req.params.id;
+    console.log(areaId);
+    const area = await pool.query('SELECT * FROM area WHERE id = $1', [areaId]);
+    res.json(area.rows[0]);
   } catch (err) {
     console.error(err.message);
   }

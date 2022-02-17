@@ -5,13 +5,13 @@ const router = Router();
 
 router.post('/create', async (req, res) => {
   try {
-    const teacherId = req.body.master_id;
-    console.log(teacherId);
+    const teacherInfo = req.body;
+    console.log(teacherInfo);
     const newTeacher = await pool.query(
-      'INSERT INTO master_teacher (master_id) VALUES($1) RETURNING *',
-      [teacherId],
+      'INSERT INTO master_teacher (id, area,sites) VALUES($1,$2,$3) RETURNING *',
+      [teacherInfo.id, teacherInfo.area, teacherInfo.sites],
     );
-    res.json(newTeacher);
+    res.json(newTeacher.rows[0]);
   } catch (err) {
     console.error(err.message);
   }
@@ -26,11 +26,13 @@ router.get('', async (req, res) => {
   }
 });
 
+// figure out how to delete MT from other tables (tlp_user, student_group)
+// Using postman doesn't complete, but it does remove it from the database!
 router.delete('/remove/:master_id', async (req, res) => {
   try {
     console.log(req.params);
     const masterId = req.params.master_id;
-    await pool.query('DELETE FROM master_teacher WHERE master_id = masterId');
+    await pool.query('DELETE FROM master_teacher WHERE id = $1', [masterId]);
     res.json('Successfully removed teacher: ', masterId);
   } catch (err) {
     console.log(err.message);
