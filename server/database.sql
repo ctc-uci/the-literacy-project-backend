@@ -43,7 +43,7 @@ CREATE TABLE site (
     s_last_name VARCHAR(255),
     s_title VARCHAR(255),
     s_phone_num VARCHAR(15),
-    s_email VARCHAR(255) NOT NULL,
+    s_email VARCHAR(255),
     notes VARCHAR(255)
 );
 
