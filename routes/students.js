@@ -13,7 +13,15 @@ router.get('', async (req, res) => {
 });
 
 // '/create'
-// router.get('/create', async (req, res) => {
+// router.post('', async (req, res) => {
+//   try {
+//   } catch (err) {
+//     console.error(err.message);
+//   }
+// });
+
+//
+// router.put('', async (req, res) => {
 //   try {
 //   } catch (err) {
 //     console.error(err.message);
