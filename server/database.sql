@@ -38,15 +38,15 @@ CREATE TABLE area (
 
 DROP TABLE site CASCADE;
 CREATE TABLE site (
-    site_id SERIAL PRIMARY KEY,
-    site_name VARCHAR(255) NOT NULL,
-    address_street VARCHAR(255) NOT NULL,
-    address_city VARCHAR(255) NOT NULL,
-    address_zip VARCHAR(5) NOT NULL,
-    area_id INT REFERENCES area(area_id) ON DELETE CASCADE NOT NULL,
-    primary_contact_id INT REFERENCES general_user(user_id) NOT NULL,
-    second_contact_id INT REFERENCES general_user(user_id),
-    notes VARCHAR(255)
+  site_id SERIAL PRIMARY KEY,
+  site_name VARCHAR(255) NOT NULL,
+  address_street VARCHAR(255) NOT NULL,
+  address_city VARCHAR(255) NOT NULL,
+  address_zip VARCHAR(5) NOT NULL,
+  area_id INT REFERENCES area(area_id) ON DELETE CASCADE NOT NULL,
+  primary_contact_id INT REFERENCES general_user(user_id) NOT NULL,
+  second_contact_id INT REFERENCES general_user(user_id),
+  notes VARCHAR(255)
 );
 
 DROP TABLE student_group CASCADE;
@@ -62,15 +62,15 @@ CREATE TABLE student_group (
 
 DROP TABLE student CASCADE;
 CREATE TABLE student (
-    student_id SERIAL PRIMARY KEY,
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    contact INT REFERENCES general_user(user_id) ON DELETE NO ACTION NOT NULL,
-    site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
-    student_group INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
-    pretest_r INT[],
-    posttest_r INT[],
-    pretest_a INT[],
-    posttest_a INT[]
+  student_id SERIAL PRIMARY KEY,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  contact INT REFERENCES general_user(user_id) ON DELETE NO ACTION NOT NULL,
+  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
+  student_group INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
+  pretest_r INT[],
+  posttest_r INT[],
+  pretest_a INT[],
+  posttest_a INT[]
 );
 
