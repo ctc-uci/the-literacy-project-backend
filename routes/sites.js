@@ -51,7 +51,10 @@ router.get('/:id', async (req, res) => {
 router.get('/:year', async (req, res) => {
   try {
     const { year } = req.params;
-    const sites = await pool.query('SELECT site_id FROM student_group WHERE year = $1', [year]);
+    const sites = await pool.query(
+      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCE site_id FROM student_group WHERE year = $1)',
+      [year],
+    );
     res.json(sites.rows[0]);
   } catch (err) {
     console.error(err.message);
@@ -63,7 +66,7 @@ router.get('/:year/:cycle', async (req, res) => {
   try {
     const { year, cycle } = req.params;
     const sites = await pool.query(
-      'SELECT site_id FROM student_group WHERE year = $1 AND cycle = $2',
+      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1 AND cycle = $2)',
       [year, cycle],
     );
     res.json(sites.rows[0]);
