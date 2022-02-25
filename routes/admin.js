@@ -10,7 +10,9 @@ router.post('', async (req, res) => {
   try {
     const { firebaseId, firstName, lastName, phoneNumber, email, active } = req.body;
     const admin = await pool.query(
-      'INSERT INTO general_user(first_name, last_name, phone_number, email) VALUES ($1, $2, $3, $4) RETURNING *',
+      `INSERT INTO general_user(first_name, last_name, phone_number, email)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *`,
       [firstName, lastName, phoneNumber, email],
     );
 
@@ -30,7 +32,13 @@ router.post('', async (req, res) => {
 router.get('', async (req, res) => {
   try {
     const allAdmins = await pool.query(
-      "SELECT genUser.user_id, genUser.first_name, genUser.last_name, genUser.phone_number, genUser.email, adminUser.active FROM (SELECT * FROM tlp_user WHERE position = 'admin') AS adminUser INNER JOIN general_user AS genUser ON adminUser.user_id=genUser.user_id",
+      `SELECT genUser.user_id, genUser.first_name, genUser.last_name, genUser.phone_number, genUser.email, adminUser.active
+      FROM (
+        SELECT * FROM tlp_user
+        WHERE position = 'admin'
+        ) AS adminUser
+      INNER JOIN general_user AS genUser
+      ON adminUser.user_id=genUser.user_id`,
     );
     res.json(allAdmins.rows);
   } catch (err) {
@@ -44,7 +52,13 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const selectedAdmin = await pool.query(
-      "SELECT genUser.first_name, genUser.last_name, genUser.phone_number, genUser.email, adminUser.active FROM (SELECT * FROM tlp_user WHERE position = 'admin' AND user_id = $1) AS adminUser INNER JOIN general_user AS genUser ON adminUser.user_id=genUser.user_id",
+      `SELECT genUser.first_name, genUser.last_name, genUser.phone_number, genUser.email, adminUser.active
+      FROM (
+        SELECT * FROM tlp_user
+        WHERE position = 'admin' AND user_id = $1
+        ) AS adminUser
+      INNER JOIN general_user AS genUser
+      ON adminUser.user_id=genUser.user_id`,
       [id],
     );
     res.json(selectedAdmin.rows);
@@ -59,15 +73,21 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    if (!Number.isInteger(parseInt(id, 10))) {
+      throw new Error('ID parameter must be an integer');
+    }
     const { firstName, lastName, phoneNumber, email, active } = req.body;
     await pool.query(
-      'UPDATE general_user SET first_name = $1, last_name = $2, phone_number = $3, email = $4 WHERE user_id = $5',
+      `UPDATE general_user
+      SET first_name = $1, last_name = $2, phone_number = $3, email = $4 WHERE user_id = $5`,
       [firstName, lastName, phoneNumber, email, id],
     );
-    await pool.query("UPDATE tlp_user SET active = $1 WHERE user_id = $2 AND position = 'admin'", [
-      active,
-      id,
-    ]);
+    await pool.query(
+      `UPDATE tlp_user
+      SET active = $1
+      WHERE user_id = $2 AND position = 'admin'`,
+      [active, id],
+    );
     res.status(200).send(`Successfully updated admin: ${id}`);
   } catch (err) {
     res.status(400).send(err.message);
@@ -79,7 +99,10 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM general_user WHERE user_id = $1', [id]);
+    if (!Number.isInteger(parseInt(id, 10))) {
+      throw new Error('ID parameter must be an integer');
+    }
+    await pool.query(`DELETE FROM general_user WHERE user_id = $1`, [id]);
     res.status(200).send(`Successfully removed admin: ${id}`);
   } catch (err) {
     res.status(400).send(err.message);
