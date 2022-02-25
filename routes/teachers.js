@@ -60,8 +60,10 @@ router.get('', async (req, res) => {
         tlp_user.active,
         master_teacher.sites
       FROM master_teacher
-        INNER JOIN tlp_user ON tlp_user.firebase_id=master_teacher.firebase_id
-        INNER JOIN general_user ON general_user.user_id=tlp_user.user_id`,
+        INNER JOIN tlp_user
+          ON tlp_user.firebase_id=master_teacher.firebase_id
+        INNER JOIN general_user
+          ON general_user.user_id=tlp_user.user_id`,
     );
     /* Resulting table rows will have:
     - First name
@@ -89,7 +91,8 @@ router.get('/:id', async (req, res) => {
       FROM master_teacher
         INNER JOIN tlp_user ON tlp_user.firebase_id=master_teacher.firebase_id
         INNER JOIN general_user ON general_user.user_id=tlp_user.user_id
-      WHERE general_user.user_id=$1`,
+      WHERE
+        general_user.user_id=$1`,
       [id],
     );
     /* Resulting table rows will have:
