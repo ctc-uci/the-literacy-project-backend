@@ -8,6 +8,8 @@ CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
 DROP TABLE general_user CASCADE;
 CREATE TABLE general_user (
   user_id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  position pos NOT NULL,
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
   phone_number VARCHAR(15) NOT NULL,
