@@ -114,9 +114,28 @@ router.get('/:site', async (req, res) => {
   const { site } = req.params;
   try {
     const allTeachers = await pool.query(
-      'SELECT * from master_teacher WHERE sites @> ARRAY[$1]::int[]',
+      `SELECT
+        general_user.first_name, general_user.last_name, general_user.phone_number, general_user.email,
+        tlp_user.active,
+        master_teacher.sites
+      FROM master_teacher
+        INNER JOIN tlp_user
+          ON tlp_user.firebase_id=master_teacher.firebase_id
+        INNER JOIN general_user
+          ON general_user.user_id=tlp_user.user_id
+      WHERE
+        sites @> ARRAY[$1]::int[]
+      `,
       [site],
     );
+    /* Resulting table rows will have:
+    - First name
+    - Last name
+    - Phone number (string)
+    - Email
+    - Active status (enum val)
+    - Sites (array)
+    ASSUMING the master teacher is properly initialized in tables general_user, tlp_user, and master_teacher */
     res.json(allTeachers.rows);
   } catch (err) {
     console.error(err.message);
