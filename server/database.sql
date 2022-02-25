@@ -31,7 +31,7 @@ CREATE TABLE master_teacher (
 
 DROP TABLE area CASCADE;
 CREATE TABLE area (
-  id SERIAL PRIMARY KEY,
+  area_id SERIAL PRIMARY KEY,
   area_name VARCHAR(255) NOT NULL,
   active BOOLEAN NOT NULL
 );
@@ -73,4 +73,3 @@ CREATE TABLE student (
   pretest_a INT[],
   posttest_a INT[]
 );
-
