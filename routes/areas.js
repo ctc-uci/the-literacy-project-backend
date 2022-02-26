@@ -1,15 +1,8 @@
 const { Router } = require('express');
 const pool = require('../server/db');
+const { isBoolean, isNumeric } = require('./utils');
 
 const router = Router();
-
-const isNumeric = (value) => {
-  return /^-?\d+$/.test(value);
-};
-
-const isBoolean = (value) => {
-  return value === 'true' || value === 'false';
-};
 
 // getting an area by id
 router.get('/:areaId', async (req, res) => {
