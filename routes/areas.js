@@ -1,126 +1,99 @@
 const { Router } = require('express');
 const pool = require('../server/db');
 
-const siteRouter = Router();
+const router = Router();
 
-// get a site by id
-siteRouter.get('/:siteId', async (req, res) => {
+const isNumeric = (value) => {
+  return /^-?\d+$/.test(value);
+};
+
+const isBoolean = (value) => {
+  return value === 'true' || value === 'false';
+};
+
+// getting an area by id
+router.get('/:areaId', async (req, res) => {
   try {
-    const { siteId } = req.params;
-    if (!Number.isInteger(siteId)) {
-      throw new Error('Site ID must be an Integer');
+    const { areaId } = req.params;
+    if (!isNumeric(areaId)) {
+      throw new Error('Area Id must be a Number');
     }
-    const site = await pool.query(`SELECT * FROM site WHERE site_id = $1`, [siteId]);
+    const area = await pool.query(`SELECT * FROM area WHERE area_id = $1`, [areaId]);
     res.send({
-      site: site.rows[0],
+      area: area.rows[0],
     });
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
-// get all the sites
-siteRouter.get('/', async (req, res) => {
+// get all the areas
+router.get('/', async (req, res) => {
   try {
-    const sites = await pool.query('SELECT * FROM site;');
+    const areas = await pool.query('SELECT * FROM area;');
     res.send({
-      sites: sites.rows,
+      sites: areas.rows,
     });
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
-// create a new site
-siteRouter.post('/create', async (req, res) => {
+// creating an area
+router.post('/', async (req, res) => {
   try {
-    const {
-      siteName,
-      addressStreet,
-      addressCity,
-      addressZip,
-      areaId,
-      primaryContactId,
-      secondContactId,
-      notes,
-    } = req.body;
-    const newSite = await pool.query(
-      `INSERT INTO site (
-        site_name,
-        address_street,
-        address_city,
-        address_zip,
-        area_id,
-        primary_contact_id,
-        ${secondContactId ? 'secondary_contact_id,' : ''},
-        notes)
-      VALUES (
-        $(siteName), $(addressStreet), $(addressCity),
-        $(addressZip), $(areaId), $(primaryContactId),
-        ${secondContactId ? ' $(secondContactId),' : ''} $(notes))
-      RETURNING *`,
-      {
-        siteName,
-        addressStreet,
-        addressCity,
-        addressZip,
-        areaId,
-        primaryContactId,
-        secondContactId,
-        notes,
-      },
+    const { areaName, active } = req.body;
+    if (!isBoolean(active)) {
+      throw new Error('Active should be a boolean value');
+    }
+    const newArea = await pool.query(
+      'INSERT INTO area (area_name, active) VALUES($1, $2) RETURNING *',
+      [areaName, active],
     );
-    res.send(newSite.rows);
+    res.json(newArea.rows[0]);
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
-// update a site
+// updating an area
+router.put('/:areaId', async (req, res) => {
+  try {
+    const { areaId } = req.params;
+    if (!isNumeric(areaId)) {
+      throw new Error('Area Id must be a Number');
+    }
+    const { areaName, active } = req.body;
+    if (!isBoolean(active)) {
+      throw new Error('Active should be a boolean value');
+    }
+    const updatedArea = await pool.query(
+      `UPDATE area
+      SET area_name = $1, active = $2
+      WHERE area_id = $3
+      RETURNING *`,
+      [areaName, active, areaId],
+    );
+    res.send(updatedArea.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
 
-// delete a site by id
-// siteRouter.delete('/:siteId', async (req, res) => {
-//   try {
+// deleting an area
+router.delete('/:areaId', async (req, res) => {
+  try {
+    const { areaId } = req.params;
+    if (!isNumeric(areaId)) {
+      throw new Error('Area Id must be a Number');
+    }
+    const deletedArea = await pool.query(`DELETE FROM area WHERE area_id = $1 RETURNING *`, [
+      areaId,
+    ]);
+    res.send(deletedArea.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
 
-//   } catch (err) {
-//     res.status(400).send(err.message);
-//   }
-// })
-
-// works
-// router.post('/create', async (req, res) => {
-//   try {
-//     const areaInfo = req.body;
-//     console.log(areaInfo);
-//     const newArea = await pool.query(
-//       'INSERT INTO area (area_name, active) VALUES($1,$2) RETURNING *',
-//       [areaInfo.area_name, areaInfo.active],
-//     );
-//     res.json(newArea.rows[0]);
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// });
-
-// // Works!
-// router.get('/:id', async (req, res) => {
-//   try {
-//     const areaId = req.params.id;
-//     console.log(areaId);
-//     const area = await pool.query('SELECT * FROM area WHERE id = $1', [areaId]);
-//     res.json(area.rows[0]);
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-//   // res.json('This is the school page');
-// });
-
-// router.post('/', async (req, res) => {
-//   try{
-
-//   } catch (err) {
-//     console.log(err.message);
-//   }
-// });
-
-module.exports = siteRouter;
+module.exports = router;

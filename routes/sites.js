@@ -45,4 +45,79 @@ router.get('', async (req, res) => {
   }
 });
 
+// const siteRouter = Router();
+
+// // get a site by id
+// siteRouter.get('/:siteId', async (req, res) => {
+//   try {
+//     const { siteId } = req.params;
+//     if (!Number.isInteger(siteId)) {
+//       throw new Error('Site ID must be an Integer');
+//     }
+//     const site = await pool.query(`SELECT * FROM site WHERE site_id = $1`, [siteId]);
+//     res.send({
+//       site: site.rows[0],
+//     });
+//   } catch (err) {
+//     res.status(400).send(err.message);
+//   }
+// });
+
+// // get all the sites
+// siteRouter.get('/', async (req, res) => {
+//   try {
+//     const sites = await pool.query('SELECT * FROM site;');
+//     res.send({
+//       sites: sites.rows,
+//     });
+//   } catch (err) {
+//     res.status(400).send(err.message);
+//   }
+// });
+
+// // create a new site
+// siteRouter.post('/create', async (req, res) => {
+//   try {
+//     const {
+//       siteName,
+//       addressStreet,
+//       addressCity,
+//       addressZip,
+//       areaId,
+//       primaryContactId,
+//       secondContactId,
+//       notes,
+//     } = req.body;
+//     const newSite = await pool.query(
+//       `INSERT INTO site (
+//         site_name,
+//         address_street,
+//         address_city,
+//         address_zip,
+//         area_id,
+//         primary_contact_id,
+//         ${secondContactId ? 'secondary_contact_id,' : ''},
+//         notes)
+//       VALUES (
+//         $(siteName), $(addressStreet), $(addressCity),
+//         $(addressZip), $(areaId), $(primaryContactId),
+//         ${secondContactId ? ' $(secondContactId),' : ''} $(notes))
+//       RETURNING *`,
+//       {
+//         siteName,
+//         addressStreet,
+//         addressCity,
+//         addressZip,
+//         areaId,
+//         primaryContactId,
+//         secondContactId,
+//         notes,
+//       },
+//     );
+//     res.send(newSite.rows);
+//   } catch (err) {
+//     res.status(400).send(err.message);
+//   }
+// });
+
 module.exports = router;
