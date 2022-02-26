@@ -138,7 +138,7 @@ router.get('/:year', async (req, res) => {
   try {
     const { year } = req.params;
     const sites = await pool.query(
-      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCE site_id FROM student_group WHERE year = $1)',
+      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1)',
       [year],
     );
     res.json(sites.rows[0]);
