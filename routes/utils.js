@@ -1,9 +1,21 @@
-const isNumeric = (value) => {
-  return /^\d+$/.test(value);
+const isNumeric = (value, errorMessage) => {
+  if (!/^\d+$/.test(value)) {
+    throw new Error(errorMessage);
+  }
 };
 
-const isBoolean = (value) => {
-  return value === 'true' || value === 'false';
+const isBoolean = (value, errorMessage) => {
+  if (value !== 'true' && value !== 'false') {
+    throw new Error(errorMessage);
+  }
 };
 
-module.exports = { isNumeric, isBoolean };
+const isZipCode = (value, errorMessage) => {
+  if (!/(^\d{5}$)|(^\d{5}-\d{4}$)/.test(value)) {
+    throw new Error(errorMessage);
+  }
+};
+
+// const snakeToCamel = ()
+
+module.exports = { isNumeric, isBoolean, isZipCode };
