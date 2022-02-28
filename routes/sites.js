@@ -1,48 +1,165 @@
 const { Router } = require('express');
-const pool = require('../server/db');
+const { pool, db } = require('../server/db');
+const { isNumeric, isZipCode } = require('./utils');
 
 const router = Router();
 
-// Works!
-router.post('/create', async (req, res) => {
+// get a site by id
+router.get('/:siteId', async (req, res) => {
   try {
-    console.log(req.body);
-    const siteInfo = req.body;
-    const newSite = await pool.query(
-      'INSERT INTO site (site_name, address_street, address_city, address_zip, area_id, p_first_name, p_last_name, p_title, p_phone_num, p_email, s_first_name, s_last_name, s_title, s_phone_num, s_email, notes) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *',
-      [
-        siteInfo.site_name,
-        siteInfo.address_street,
-        siteInfo.address_city,
-        siteInfo.address_zip,
-        siteInfo.area_id,
-        siteInfo.p_first_name,
-        siteInfo.p_last_name,
-        siteInfo.p_title,
-        siteInfo.p_phone_num,
-        siteInfo.p_email,
-        siteInfo.s_first_name,
-        siteInfo.s_last_name,
-        siteInfo.s_title,
-        siteInfo.s_phone_num,
-        siteInfo.s_email,
-        siteInfo.notes,
-      ],
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const site = await pool.query(`SELECT * FROM site WHERE site_id = $1`, [siteId]);
+    res.status(200).send(site.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// get all sites
+router.get('/', async (req, res) => {
+  try {
+    const sites = await pool.query('SELECT * FROM site;');
+    res.status(200).json(sites.rows);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// create a site
+router.post('/', async (req, res) => {
+  try {
+    const {
+      siteName,
+      addressStreet,
+      addressCity,
+      addressZip,
+      areaId,
+      primaryContactId,
+      secondContactId,
+      notes,
+    } = req.body;
+    isZipCode(addressZip, 'Zip code is invalid');
+    isNumeric(areaId, 'Area Id must be a Number');
+    isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
+    if (secondContactId) {
+      isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
+    }
+    const newSite = await db.query(
+      `INSERT INTO site (
+        site_name, address_street, address_city,
+        address_zip, area_id, primary_contact_id
+        ${secondContactId ? ', second_contact_id' : ''}
+        ${notes ? ', notes' : ''})
+      VALUES (
+        $(siteName), $(addressStreet), $(addressCity),
+        $(addressZip), $(areaId), $(primaryContactId)
+        ${secondContactId ? ', $(secondContactId)' : ''}
+        ${notes ? ', $(notes)' : ''})
+      RETURNING *`,
+      {
+        siteName,
+        addressStreet,
+        addressCity,
+        addressZip,
+        areaId,
+        primaryContactId,
+        secondContactId,
+        notes,
+      },
     );
-    res.json(newSite.rows[0]);
-    // console.log(id);
+    res.status(200).send(newSite[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// update a site
+router.put('/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const {
+      siteName,
+      addressStreet,
+      addressCity,
+      addressZip,
+      areaId,
+      primaryContactId,
+      secondContactId,
+      notes,
+    } = req.body;
+    isZipCode(addressZip, 'Zip code is invalid');
+    isNumeric(areaId, 'Area Id must be a Number');
+    isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
+    if (secondContactId) {
+      isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
+    }
+    const updatedSite = await db.query(
+      `UPDATE site
+      SET site_name = $(siteName), address_street = $(addressStreet), address_city = $(addressCity),
+      address_zip = $(addressZip), area_id = $(areaId), primary_contact_id = $(primaryContactId)
+      ${secondContactId ? ', second_contact_id = $(secondContactId)' : ''}
+      ${notes ? ', notes = $(notes)' : ''}
+      WHERE site_id = $(siteId)
+      RETURNING *;`,
+      {
+        siteName,
+        addressStreet,
+        addressCity,
+        addressZip,
+        areaId,
+        primaryContactId,
+        secondContactId,
+        notes,
+        siteId,
+      },
+    );
+    res.status(200).send(updatedSite[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// delete site
+router.delete('/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const site = await pool.query('DELETE FROM site WHERE site_id = $1 RETURNING *', [siteId]);
+    res.status(200).send(site.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// not tested yet
+router.get('/:year', async (req, res) => {
+  try {
+    const { year } = req.params;
+    const sites = await pool.query(
+      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1)',
+      [year],
+    );
+    res.json(sites.rows[0]);
   } catch (err) {
     console.error(err.message);
   }
 });
 
-router.get('', async (req, res) => {
+// not tested yet
+router.get('/:year/:cycle', async (req, res) => {
   try {
-    const allSites = await pool.query('SELECT * FROM site');
-    res.json(allSites.rows);
+    const { year, cycle } = req.params;
+    const sites = await pool.query(
+      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1 AND cycle = $2)',
+      [year, cycle],
+    );
+    res.json(sites.rows[0]);
   } catch (err) {
     console.error(err.message);
   }
 });
+// const siteRouter = Router();
 
 module.exports = router;
