@@ -1,25 +1,26 @@
 const { Router } = require('express');
-const pool = require('../server/db');
+const { pool, db } = require('../server/db');
+const { isNumeric } = require('./utils');
 
 const router = Router();
 
 // get a student by id
-// router.get('/:studentId', async (req, res) => {
-//   try {
-//     const { studentId } = req.params;
-//     isNumeric(areaId, 'Area Id must be a Number');
-//     const area = await pool.query(`SELECT * FROM area WHERE area_id = $1;`, [areaId]);
-//     res.status(200).send(area.rows[0]);
-//   } catch (err) {
-//     res.status(400).send(err.message);
-//   }
-// });
+router.get('/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    isNumeric(studentId, 'Student Id must be a Number');
+    const area = await pool.query(`SELECT * FROM student WHERE student_id = $1;`, [studentId]);
+    res.status(200).send(area.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
 
 // get all students
 router.get('/', async (req, res) => {
   try {
     const allStudents = await pool.query('SELECT * FROM student');
-    res.status(200).send(allStudents.rows);
+    res.status(200).json(allStudents.rows);
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -28,58 +29,80 @@ router.get('/', async (req, res) => {
 // create a student
 router.post('/', async (req, res) => {
   try {
-    const student = req.body;
-    // console.log(student);
+    const { firstName, lastName, contactId, siteId, studentGroup } = req.body;
+    isNumeric(contactId, 'Site Id must be a Number');
+    isNumeric(siteId, 'Contact Id must be a Number');
+    isNumeric(studentGroup, 'Contact Id must be a Number');
     const newStudent = await pool.query(
-      'INSERT INTO student (first_name, last_name, contact, site_id, student_group) VALUES ($1, $2, $3, $4, $5) RETURNING student_id',
-      [
-        student.first_name,
-        student.last_name,
-        student.contact,
-        student.site_id,
-        student.student_group,
-      ],
+      `INSERT INTO student (first_name, last_name, contact_id, site_id, student_group)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *;`,
+      [firstName, lastName, contactId, siteId, studentGroup],
     );
-    res.json(newStudent.rows[0]);
-    res.status(200).send();
+    res.status(200).send(newStudent.rows[0]);
   } catch (err) {
-    console.error(err.message);
+    res.status(400).send(err.message);
   }
 });
-// update a student
-// router.put('/:id', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { first_name } = req.body;
-//     const { last_name } = req.body;
-//     const { contact } = req.body;
-//     const { site_id } = req.body;
-//     const { student_group } = req.body;
-//     const updatestudent = await pool.query(
-//       'UPDATE student SET first_name = $1, last_name = $2, contact = $3, site_id = $4, student_group = $5, WHERE student_id = $6',
-//       [first_name, last_name, contact, site_id, student_group, id],
-//     );
-//     res.json('Student was successfully updated.');
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// });
+
+// update a student's general contact
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    isNumeric(id, 'Student Id must be a Number');
+    const { firstName, lastName, contactId, siteId, studentGroup } = req.body;
+    isNumeric(contactId, 'Contact Id must be a Number');
+    isNumeric(siteId, 'Site Id must be a Number');
+    isNumeric(studentGroup, 'Student Group Id must be a Number');
+    const updatedStudent = await db.query(
+      `UPDATE student
+      SET first_name = $(firstName), last_name = $(lastName), contact = $(contactId), site_id = $(siteId), student_group = $(studentGroup),
+      WHERE student_id = $(id)
+      RETURNING *;`,
+      { firstName, lastName, contactId, siteId, studentGroup, id },
+    );
+    res.send(200).json(updatedStudent.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// update scores for a specific student
+router.post('/update-scores/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    isNumeric(id, 'Student Id must be a Number');
+    const { pretestR, posttestR, pretestA, posttestA } = req.body;
+    const student = await db.query(
+      `UPDATE student
+      SET ${pretestR ? ', pretest_r = $(pretestR)' : ''}
+      ${posttestR ? ', posttest_r = $(posttestR)' : ''}
+      ${pretestA ? ', pretest_a = $(pretestA)' : ''}
+      ${posttestA ? ', posttest_a = $(posttestA)' : ''}
+      WHERE student_id = $(id)
+      RETURNING *;`,
+      { pretestR, posttestR, pretestA, posttestA, id },
+    );
+    res.status(200).send(student.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
 
 // delete a student
-
-// router.post('/update-scores/:id', async(req, res) => {
-//   try {
-//     const student = req.body;
-//     console.log(student);
-//     const studentScores = await pool.query(
-//       'INSERT INTO student (pretest_r, posttest_r, pretest_a, posttest_a) VALUES ($1, $2, $3, $4) RETURNING * ',
-//       [student.pretest_r, student.posttest_r, student.pretest_a, student.posttest_a],
-//     );
-//     res.json("Student's scores was successfully updated.")
-//   } catch (err) {
-//     console.error(err.message);
-//   }
-// });
+router.delete('/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    isNumeric(studentId, 'Student Id must be a Number');
+    const deletedStudent = await pool.query(
+      `DELETE FROM student WHERE student_id = $1 RETURNING *;`,
+      studentId,
+    );
+    res.status(200).send(deletedStudent.rows[0]);
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
 
 // '/create'
 // router.get('/create', async (req, res) => {
