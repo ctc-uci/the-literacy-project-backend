@@ -16,14 +16,12 @@ const app = express();
 
 const PORT = process.env.PORT || 3001;
 
-// Causes a CORS (Access-Control-Allow-Credentials) error when frontend tries to fetch from backend
 // app.use(
 //   cors({
 //     origin: `${process.env.FRONTEND_REACT_APP_HOST}:${process.env.FRONTEND_REACT_APP_PORT}`,
 //   }),
 // );
-
-app.use(express.json()); // this gives us req.body
+// app.use(express.json()); // this gives us req.body
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); // Allows frontend (which is on port 3000) to bypass CORS
