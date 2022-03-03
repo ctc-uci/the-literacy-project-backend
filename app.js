@@ -10,6 +10,7 @@ const teachersRouter = require('./routes/teachers');
 const sites = require('./routes/sites');
 const areas = require('./routes/areas');
 const students = require('./routes/students');
+const admin = require('./routes/admin');
 
 const app = express();
 
@@ -17,7 +18,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(
   cors({
-    origin: `${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}`,
+    origin: `${process.env.FRONTEND_REACT_APP_HOST}:${process.env.FRONTEND_REACT_APP_PORT}`,
   }),
 );
 app.use(express.json()); // this gives us req.body
@@ -30,6 +31,7 @@ app.use('/teachers', teachersRouter);
 app.use('/sites', sites);
 app.use('/areas', areas);
 app.use('/students', students);
+app.use('/admin', admin);
 // school district
 // schools
 

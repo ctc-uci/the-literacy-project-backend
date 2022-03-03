@@ -11,27 +11,34 @@ CREATE TABLE general_user (
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
   phone_number VARCHAR(15) NOT NULL,
-  email VARCHAR(50) NOT NULL,
+  email VARCHAR(255) NOT NULL,
   title VARCHAR(255)
 );
 
 DROP TABLE tlp_user CASCADE;
 CREATE TABLE tlp_user (
-  user_id INT UNIQUE REFERENCES general_user(user_id) ON DELETE CASCADE,
-  firebase_id CHAR(28) PRIMARY KEY NOT NULL,
+  user_id INT PRIMARY KEY REFERENCES general_user(user_id) ON DELETE CASCADE,
+  firebase_id VARCHAR(128) NOT NULL,
   position pos NOT NULL,
   active user_status NOT NULL
 );
 
-DROP TABLE master_teacher CASCADE;
-CREATE TABLE master_teacher (
-  firebase_id CHAR(28) PRIMARY KEY REFERENCES tlp_user(firebase_id) ON DELETE CASCADE,
-  sites INT[]
+-- DROP TABLE master_teacher CASCADE;
+-- CREATE TABLE master_teacher (
+--   user_id INT PRIMARY KEY REFERENCES tlp_user(user_id) ON DELETE CASCADE,
+--   sites INT[]
+-- );
+
+DROP TABLE master_teacher_site_relation CASCADE;
+CREATE TABLE master_teacher_site_relation (
+  user_id INT REFERENCES tlp_user(user_id) ON DELETE CASCADE NOT NULL,
+  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
+  UNIQUE (user_id, site_id)
 );
 
 DROP TABLE area CASCADE;
 CREATE TABLE area (
-  id SERIAL PRIMARY KEY,
+  area_id SERIAL PRIMARY KEY,
   area_name VARCHAR(255) NOT NULL,
   active BOOLEAN NOT NULL
 );
@@ -54,10 +61,17 @@ CREATE TABLE student_group (
   group_id SERIAL PRIMARY KEY,
   year INT NOT NULL,
   cycle season NOT NULL,
-  master_teacher CHAR(28) REFERENCES master_teacher(firebase_id) ON DELETE NO ACTION,
-  students INT[] NOT NULL,
+  master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION,
+  -- students INT[] NOT NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
   meeting_time DATE NOT NULL
+);
+
+DROP TABLE student_group_relation CASCADE;
+CREATE TABLE student_group_relation (
+  student_id INT REFERENCES student(student_id) ON DELETE CASCADE NOT NULL,
+  group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
+  UNIQUE (student_id, group_id)
 );
 
 DROP TABLE student CASCADE;
@@ -65,7 +79,7 @@ CREATE TABLE student (
   student_id SERIAL PRIMARY KEY,
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
-  contact INT REFERENCES general_user(user_id) ON DELETE NO ACTION NOT NULL,
+  contact_id INT REFERENCES general_user(user_id) ON DELETE NO ACTION NOT NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
   student_group INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
   pretest_r INT[],
@@ -73,4 +87,3 @@ CREATE TABLE student (
   pretest_a INT[],
   posttest_a INT[]
 );
-
