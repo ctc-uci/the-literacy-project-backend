@@ -58,13 +58,14 @@ router.get('', async (req, res) => {
       `SELECT
         general_user.first_name, general_user.last_name, general_user.phone_number, general_user.email,
         tlp_user.active,
-        master_teacher.sites
-      FROM master_teacher
-        INNER JOIN tlp_user
-          ON tlp_user.firebase_id=master_teacher.firebase_id
+        master_teacher_site_relation.sites
+      FROM master_teacher_site_relation
+        INNER JOIN tlp_user ON tlp_user.user_id=master_teacher_site_relation.user_id
         INNER JOIN general_user
           ON general_user.user_id=tlp_user.user_id`,
     );
+    // INNER JOIN tlp_userON tlp_user.firebase_id=master_teacher_site_relation.firebase_id
+    // ^commented this out bc master teacher table doesn't have firebase_id currently
     /* Resulting table rows will have:
     - First name
     - Last name
