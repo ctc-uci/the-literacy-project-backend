@@ -22,7 +22,6 @@ router.post('/create', async (req, res) => {
     teacherInfo = await pool.query('SELECT * from general_user WHERE email = $1', [
       teacherInfo.email,
     ]); // This query is needed to fetch the user id for updating the tlp_user table
-    console.log(teacherInfo.rows.length);
     const newTLPUser = await db.query(
       `INSERT INTO tlp_user
         (user_id, firebase_id, position, active)
@@ -36,7 +35,6 @@ router.post('/create', async (req, res) => {
         'pending', // by default, master teachers will be initialized as pending since they need to activate their email
       ],
     );
-    console.log('new tlp user', newTLPUser);
     const newMasterTeacher = await pool.query(
       `INSERT INTO master_teacher_site_relation
         (user_id, sites)
