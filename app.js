@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors');
+// const cors = require('cors');
 
 require('dotenv').config();
 
@@ -16,12 +16,22 @@ const app = express();
 
 const PORT = process.env.PORT || 3001;
 
-app.use(
-  cors({
-    origin: `${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}`,
-  }),
-);
+// Causes a CORS (Access-Control-Allow-Credentials) error when frontend tries to fetch from backend
+// app.use(
+//   cors({
+//     origin: `${process.env.FRONTEND_REACT_APP_HOST}:${process.env.FRONTEND_REACT_APP_PORT}`,
+//   }),
+// );
+
 app.use(express.json()); // this gives us req.body
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); // Allows frontend (which is on port 3000) to bypass CORS
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  next();
+});
 
 // Database Schema
 // https://docs.google.com/document/d/11OQiiVDpT07Rk-jz0VY7yVKsAjqZC_97wewZR32cw6w/edit
