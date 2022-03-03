@@ -32,7 +32,8 @@ CREATE TABLE tlp_user (
 DROP TABLE master_teacher_site_relation CASCADE;
 CREATE TABLE master_teacher_site_relation (
   user_id INT REFERENCES tlp_user(user_id) ON DELETE CASCADE NOT NULL,
-  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL
+  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
+  UNIQUE (user_id, site_id)
 );
 
 DROP TABLE area CASCADE;
@@ -69,7 +70,8 @@ CREATE TABLE student_group (
 DROP TABLE student_group_relation CASCADE;
 CREATE TABLE student_group_relation (
   student_id INT REFERENCES student(student_id) ON DELETE CASCADE NOT NULL,
-  group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL
+  group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
+  UNIQUE (student_id, group_id)
 );
 
 DROP TABLE student CASCADE;
