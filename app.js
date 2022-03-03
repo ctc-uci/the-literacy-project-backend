@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(
   cors({
-    origin: `${process.env.REACT_APP_HOST}:${process.env.REACT_APP_PORT}`,
+    origin: `${process.env.FRONTEND_REACT_APP_HOST}:${process.env.FRONTEND_REACT_APP_PORT}`,
   }),
 );
 app.use(express.json()); // this gives us req.body
