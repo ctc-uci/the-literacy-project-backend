@@ -22,6 +22,12 @@ const isAlphaNumeric = (value, errorMessage) => {
   }
 };
 
+const isPhoneNumber = (value, errorMessage) => {
+  if (!/^\d+$/.test(value) || value.length !== 9) {
+    throw new Error(errorMessage);
+  }
+};
+
 // const snakeToCamel = ()
 
-module.exports = { isNumeric, isBoolean, isZipCode, isAlphaNumeric };
+module.exports = { isNumeric, isBoolean, isZipCode, isAlphaNumeric, isPhoneNumber };
