@@ -98,9 +98,9 @@ router.put('/:siteId', async (req, res) => {
     const updatedSite = await db.query(
       `UPDATE site
       SET site_name = $(siteName), address_street = $(addressStreet), address_city = $(addressCity),
-      address_zip = $(addressZip), area_id = $(areaId), primary_contact_id = $(primaryContactId)
-      ${secondContactId ? ', second_contact_id = $(secondContactId)' : ''}
-      ${notes ? ', notes = $(notes)' : ''}
+          address_zip = $(addressZip), area_id = $(areaId), primary_contact_id = $(primaryContactId)
+          ${secondContactId ? ', second_contact_id = $(secondContactId)' : ''}
+          ${notes ? ', notes = $(notes)' : ''}
       WHERE site_id = $(siteId)
       RETURNING *;`,
       {
@@ -133,33 +133,32 @@ router.delete('/:siteId', async (req, res) => {
   }
 });
 
-// not tested yet
-router.get('/:year', async (req, res) => {
-  try {
-    const { year } = req.params;
-    const sites = await pool.query(
-      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1)',
-      [year],
-    );
-    res.status(200).send(sites.rows[0]);
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
+// get all sites that have a student group in the given year
+// router.get('/:year', async (req, res) => {
+//   try {
+//     const { year } = req.params;
+//     const sites = await pool.query(
+//       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1)',
+//       [year],
+//     );
+//     res.status(200).json(sites.rows);
+//   } catch (err) {
+//     res.status(400).send(err.message);
+//   }
+// });
 
 // not tested yet
-router.get('/:year/:cycle', async (req, res) => {
-  try {
-    const { year, cycle } = req.params;
-    const sites = await pool.query(
-      'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1 AND cycle = $2)',
-      [year, cycle],
-    );
-    res.status(200).send(sites.rows[0]);
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
-// const siteRouter = Router();
+// router.get('/:year/:cycle', async (req, res) => {
+//   try {
+//     const { year, cycle } = req.params;
+//     const sites = await pool.query(
+//       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1 AND cycle = $2)',
+//       [year, cycle],
+//     );
+//     res.status(200).send(sites.rows[0]);
+//   } catch (err) {
+//     res.status(400).send(err.message);
+//   }
+// });
 
 module.exports = router;

@@ -10,7 +10,7 @@ const teachersRouter = require('./routes/teachers');
 const sites = require('./routes/sites');
 const areas = require('./routes/areas');
 const students = require('./routes/students');
-const admin = require('./routes/admin');
+const admins = require('./routes/admins');
 
 const app = express();
 
@@ -32,7 +32,7 @@ app.use('/teachers', teachersRouter);
 app.use('/sites', sites);
 app.use('/areas', areas);
 app.use('/students', students);
-app.use('/admin', admin);
+app.use('/admins', admins);
 // school district
 // schools
 

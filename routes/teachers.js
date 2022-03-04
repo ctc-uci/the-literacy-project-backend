@@ -12,7 +12,8 @@ const getTeachers = (allTeachers) =>
       AS gen ON gen.user_id = tlp_user.user_id
     LEFT JOIN (SELECT m.user_id, array_agg(m.site_id ORDER BY m.site_id ASC) AS sites
       FROM master_teacher_site_relation AS m
-      GROUP BY m.user_id) AS relation ON relation.user_id = tlp_user.user_id;`;
+      GROUP BY m.user_id) AS relation ON relation.user_id = tlp_user.user_id
+  WHERE position = 'master teacher';`;
 
 // get a teacher by id
 router.get('/:teacherId', async (req, res) => {
@@ -130,13 +131,13 @@ router.delete('/remove-site/:teacherId', async (req, res) => {
   }
 });
 
-router.delete('/:userId', async (req, res) => {
+router.delete('/:teacherId', async (req, res) => {
   try {
-    const { userId } = req.params;
-    isNumeric(userId, 'User Id must be a Number');
+    const { teacherId } = req.params;
+    isNumeric(teacherId, 'Teacher Id must be a Number');
     const deletedTeacher = await pool.query(
       'DELETE FROM general_user WHERE user_id = $1 RETURNING *;',
-      [userId],
+      [teacherId],
     );
     res.status(200).send(deletedTeacher.rows[0]);
   } catch (err) {

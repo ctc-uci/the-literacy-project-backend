@@ -29,15 +29,15 @@ router.get('/', async (req, res) => {
 // create a student
 router.post('/', async (req, res) => {
   try {
-    const { firstName, lastName, contactId, siteId, studentGroup } = req.body;
+    const { firstName, lastName, contactId, siteId, studentGroupId } = req.body;
     isNumeric(contactId, 'Site Id must be a Number');
     isNumeric(siteId, 'Contact Id must be a Number');
-    isNumeric(studentGroup, 'Contact Id must be a Number');
+    isNumeric(studentGroupId, 'Contact Id must be a Number');
     const newStudent = await pool.query(
-      `INSERT INTO student (first_name, last_name, contact_id, site_id, student_group)
+      `INSERT INTO student (first_name, last_name, contact_id, site_id, student_group_id)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;`,
-      [firstName, lastName, contactId, siteId, studentGroup],
+      [firstName, lastName, contactId, siteId, studentGroupId],
     );
     res.status(200).send(newStudent.rows[0]);
   } catch (err) {
@@ -46,44 +46,47 @@ router.post('/', async (req, res) => {
 });
 
 // update a student's general contact
-router.put('/:id', async (req, res) => {
+router.put('/:studentId', async (req, res) => {
   try {
-    const { id } = req.params;
-    isNumeric(id, 'Student Id must be a Number');
-    const { firstName, lastName, contactId, siteId, studentGroup } = req.body;
+    const { studentId } = req.params;
+    isNumeric(studentId, 'Student Id must be a Number');
+    const { firstName, lastName, contactId, siteId, studentGroupId } = req.body;
     isNumeric(contactId, 'Contact Id must be a Number');
     isNumeric(siteId, 'Site Id must be a Number');
-    isNumeric(studentGroup, 'Student Group Id must be a Number');
+    isNumeric(studentGroupId, 'Student Group Id must be a Number');
     const updatedStudent = await db.query(
       `UPDATE student
-      SET first_name = $(firstName), last_name = $(lastName), contact = $(contactId), site_id = $(siteId), student_group = $(studentGroup),
-      WHERE student_id = $(id)
+      SET first_name = $(firstName), last_name = $(lastName),
+          contact_id = $(contactId), site_id = $(siteId),
+          student_group_id = $(studentGroupId)
+      WHERE student_id = $(studentId)
       RETURNING *;`,
-      { firstName, lastName, contactId, siteId, studentGroup, id },
+      { firstName, lastName, contactId, siteId, studentGroupId, studentId },
     );
-    res.send(200).json(updatedStudent.rows[0]);
+    res.status(200).send(updatedStudent[0]);
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
 // update scores for a specific student
-router.post('/update-scores/:id', async (req, res) => {
+router.put('/update-scores/:studentId', async (req, res) => {
   try {
-    const { id } = req.params;
-    isNumeric(id, 'Student Id must be a Number');
+    const { studentId } = req.params;
+    isNumeric(studentId, 'Student Id must be a Number');
     const { pretestR, posttestR, pretestA, posttestA } = req.body;
     const student = await db.query(
       `UPDATE student
-      SET ${pretestR ? ', pretest_r = $(pretestR)' : ''}
-      ${posttestR ? ', posttest_r = $(posttestR)' : ''}
-      ${pretestA ? ', pretest_a = $(pretestA)' : ''}
-      ${posttestA ? ', posttest_a = $(posttestA)' : ''}
-      WHERE student_id = $(id)
+      SET student_id = $(studentId)
+          ${pretestR ? ', pretest_r = $(pretestR)' : ''}
+          ${posttestR ? ', posttest_r = $(posttestR)' : ''}
+          ${pretestA ? ', pretest_a = $(pretestA)' : ''}
+          ${posttestA ? ', posttest_a = $(posttestA)' : ''}
+      WHERE student_id = $(studentId)
       RETURNING *;`,
-      { pretestR, posttestR, pretestA, posttestA, id },
+      { pretestR, posttestR, pretestA, posttestA, studentId },
     );
-    res.status(200).send(student.rows[0]);
+    res.status(200).send(student[0]);
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -103,8 +106,5 @@ router.delete('/:studentId', async (req, res) => {
     res.status(400).send(err.message);
   }
 });
-
-// '/export-data'
-// router.post('/export-data', async (req, res) => {});
 
 module.exports = router;
