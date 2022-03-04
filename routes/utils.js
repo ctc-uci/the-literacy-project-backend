@@ -16,6 +16,12 @@ const isZipCode = (value, errorMessage) => {
   }
 };
 
+const isAlphaNumeric = (value, errorMessage) => {
+  if (!/^[0-9a-zA-Z]+$/.test(value)) {
+    throw new Error(errorMessage);
+  }
+};
+
 // const snakeToCamel = ()
 
-module.exports = { isNumeric, isBoolean, isZipCode };
+module.exports = { isNumeric, isBoolean, isZipCode, isAlphaNumeric };
