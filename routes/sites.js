@@ -141,9 +141,9 @@ router.get('/:year', async (req, res) => {
       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1)',
       [year],
     );
-    res.json(sites.rows[0]);
+    res.status(200).send(sites.rows[0]);
   } catch (err) {
-    console.error(err.message);
+    res.status(400).send(err.message);
   }
 });
 
@@ -155,9 +155,9 @@ router.get('/:year/:cycle', async (req, res) => {
       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1 AND cycle = $2)',
       [year, cycle],
     );
-    res.json(sites.rows[0]);
+    res.status(200).send(sites.rows[0]);
   } catch (err) {
-    console.error(err.message);
+    res.status(400).send(err.message);
   }
 });
 // const siteRouter = Router();
