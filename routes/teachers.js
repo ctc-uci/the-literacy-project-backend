@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool } = require('../server/db');
-const { isNumeric, isAlphaNumeric, isPhoneNumber } = require('./utils');
+const { isNumeric, isAlphaNumeric, isPhoneNumber, keysToCamel } = require('./utils');
 
 const router = Router();
 
@@ -21,7 +21,7 @@ router.get('/:teacherId', async (req, res) => {
     const { teacherId } = req.params;
     isNumeric(teacherId, 'Teacher Id must be a Number');
     const teacher = await pool.query(getTeachers(false), [teacherId]);
-    res.status(200).send(teacher.rows[0]);
+    res.status(200).send(keysToCamel(teacher.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -31,7 +31,7 @@ router.get('/:teacherId', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const allTeachers = await pool.query(getTeachers(true));
-    res.status(200).json(allTeachers.rows);
+    res.status(200).json(keysToCamel(allTeachers.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
     );
 
     const addedTeacher = await pool.query(getTeachers(false), [teacher.rows[0].user_id]);
-    res.status(200).send(addedTeacher.rows[0]);
+    res.status(200).send(keysToCamel(addedTeacher.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -86,7 +86,7 @@ router.put('/:teacherId', async (req, res) => {
     // Updating relevant values in tlp_user table
     await pool.query('UPDATE tlp_user SET active = $1 WHERE user_id = $2', [active, teacherId]);
     const updatedTeacher = await pool.query(getTeachers(false), [teacherId]);
-    res.status(200).send(updatedTeacher.rows[0]);
+    res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -105,7 +105,7 @@ router.post('/add-site/:teacherId', async (req, res) => {
         VALUES ($1, $2) RETURNING *`,
       [teacherId, siteId],
     );
-    res.status(200).send(addedSite.rows[0]);
+    res.status(200).send(keysToCamel(addedSite.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -125,7 +125,7 @@ router.delete('/remove-site/:teacherId', async (req, res) => {
       RETURNING *`,
       [teacherId, siteId],
     );
-    res.status(200).send(removedSite.rows[0]);
+    res.status(200).send(keysToCamel(removedSite.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -139,7 +139,7 @@ router.delete('/:teacherId', async (req, res) => {
       'DELETE FROM general_user WHERE user_id = $1 RETURNING *;',
       [teacherId],
     );
-    res.status(200).send(deletedTeacher.rows[0]);
+    res.status(200).send(keysToCamel(deletedTeacher.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }

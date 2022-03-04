@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, isZipCode } = require('./utils');
+const { isNumeric, isZipCode, keysToCamel } = require('./utils');
 
 const router = Router();
 
@@ -10,7 +10,7 @@ router.get('/:siteId', async (req, res) => {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
     const site = await pool.query(`SELECT * FROM site WHERE site_id = $1`, [siteId]);
-    res.status(200).send(site.rows[0]);
+    res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -20,7 +20,7 @@ router.get('/:siteId', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const sites = await pool.query('SELECT * FROM site;');
-    res.status(200).json(sites.rows);
+    res.status(200).json(keysToCamel(sites.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -68,7 +68,7 @@ router.post('/', async (req, res) => {
         notes,
       },
     );
-    res.status(200).send(newSite[0]);
+    res.status(200).send(keysToCamel(newSite[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -115,7 +115,7 @@ router.put('/:siteId', async (req, res) => {
         siteId,
       },
     );
-    res.status(200).send(updatedSite[0]);
+    res.status(200).send(keysToCamel(updatedSite[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -127,7 +127,7 @@ router.delete('/:siteId', async (req, res) => {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
     const site = await pool.query('DELETE FROM site WHERE site_id = $1 RETURNING *', [siteId]);
-    res.status(200).send(site.rows[0]);
+    res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }

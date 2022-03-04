@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool } = require('../server/db');
-const { isNumeric, isAlphaNumeric, isPhoneNumber } = require('./utils');
+const { isNumeric, isAlphaNumeric, isPhoneNumber, keysToCamel } = require('./utils');
 
 const router = Router();
 
@@ -18,7 +18,7 @@ router.get('/:adminId', async (req, res) => {
     const { adminId } = req.params;
     isNumeric(adminId, 'Admin Id must be a Number');
     const admin = await pool.query(getAdmins(false), [adminId]);
-    res.status(200).send(admin.rows[0]);
+    res.status(200).send(keysToCamel(admin.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -28,7 +28,7 @@ router.get('/:adminId', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const allAdmins = await pool.query(getAdmins(true));
-    res.status(200).json(allAdmins.rows);
+    res.status(200).json(keysToCamel(allAdmins.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
       ],
     );
     const addedAdmin = await pool.query(getAdmins(false), [admin.rows[0].user_id]);
-    res.status(200).send(addedAdmin.rows[0]);
+    res.status(200).send(keysToCamel(addedAdmin.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -81,7 +81,7 @@ router.put('/:adminId', async (req, res) => {
     // Updating relevant values in tlp_user table
     await pool.query('UPDATE tlp_user SET active = $1 WHERE user_id = $2', [active, adminId]);
     const updatedTeacher = await pool.query(getAdmins(false), [adminId]);
-    res.status(200).send(updatedTeacher.rows[0]);
+    res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -96,7 +96,7 @@ router.delete('/:adminId', async (req, res) => {
       RETURNING *;`,
       [adminId],
     );
-    res.status(200).send(deletedAdmin.rows[0]);
+    res.status(200).send(keysToCamel(deletedAdmin.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
