@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const pool = require('../server/db');
+const { pool } = require('../server/db');
 const { isBoolean, isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();

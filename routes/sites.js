@@ -4,20 +4,19 @@ const { isNumeric, isZipCode, keysToCamel, isPhoneNumber, addContact } = require
 
 const router = Router();
 
+const getSites = (allSites) =>
+  `SELECT site.*, to_json(contact1) as "primaryContactInfo", to_json(contact2) as "secondContactInfo"
+  FROM site
+    INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
+    LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
+  ${allSites ? '' : 'WHERE site_id = $1'};`;
+
 // get a site by id
 router.get('/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
-    const site = await pool.query(
-      `SELECT site.*, json_agg(contact1) as "primaryContactInfo", json_agg(contact2.*) as "secondContactInfo"
-      FROM site
-        INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
-        LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
-      WHERE site_id = $1
-      GROUP BY site_id;`,
-      [siteId],
-    );
+    const site = await pool.query(getSites(false), [siteId]);
     res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -27,7 +26,7 @@ router.get('/:siteId', async (req, res) => {
 // get all sites
 router.get('/', async (req, res) => {
   try {
-    const sites = await pool.query('SELECT * FROM site;');
+    const sites = await pool.query(getSites(true));
     res.status(200).json(keysToCamel(sites.rows));
   } catch (err) {
     res.status(400).send(err.message);
@@ -83,7 +82,9 @@ router.post('/', async (req, res) => {
         notes,
       },
     );
-    res.status(200).send(keysToCamel(newSite[0]));
+
+    const site = await pool.query(getSites(false), [newSite[0].site_id]);
+    res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -110,7 +111,7 @@ router.put('/:siteId', async (req, res) => {
     if (secondContactId) {
       isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
     }
-    const updatedSite = await db.query(
+    await db.query(
       `UPDATE site
       SET site_name = $(siteName), address_street = $(addressStreet), address_city = $(addressCity),
           address_zip = $(addressZip), area_id = $(areaId), primary_contact_id = $(primaryContactId)
@@ -130,7 +131,8 @@ router.put('/:siteId', async (req, res) => {
         siteId,
       },
     );
-    res.status(200).send(keysToCamel(updatedSite[0]));
+    const site = await pool.query(getSites(false), [siteId]);
+    res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
