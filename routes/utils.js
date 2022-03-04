@@ -1,3 +1,5 @@
+const { pool } = require('../server/db');
+
 const isNumeric = (value, errorMessage) => {
   if (!/^\d+$/.test(value)) {
     throw new Error(errorMessage);
@@ -58,4 +60,29 @@ const keysToCamel = (data) => {
   return data;
 };
 
-module.exports = { isNumeric, isBoolean, isZipCode, isAlphaNumeric, isPhoneNumber, keysToCamel };
+const addContact = async (contactInfo) => {
+  const id = await pool.query(
+    `INSERT INTO general_user
+    (first_name, last_name, phone_number, email, title)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING *`,
+    [
+      contactInfo.firstName,
+      contactInfo.lastName,
+      contactInfo.phoneNumber,
+      contactInfo.email,
+      contactInfo.title,
+    ],
+  );
+  return id.rows[0].user_id;
+};
+
+module.exports = {
+  isNumeric,
+  isBoolean,
+  isZipCode,
+  isAlphaNumeric,
+  isPhoneNumber,
+  keysToCamel,
+  addContact,
+};

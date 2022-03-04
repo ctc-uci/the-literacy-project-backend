@@ -11,6 +11,7 @@ const sites = require('./routes/sites');
 const areas = require('./routes/areas');
 const students = require('./routes/students');
 const admins = require('./routes/admins');
+const studentGroups = require('./routes/studentGroups');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/sites', sites);
 app.use('/areas', areas);
 app.use('/students', students);
 app.use('/admins', admins);
+app.use('/student-groups', studentGroups);
 // school district
 // schools
 

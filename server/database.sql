@@ -4,6 +4,7 @@ DROP TYPE user_status CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
 CREATE TYPE season AS ENUM('winter', 'spring', 'summer', 'fall');
 CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
+CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 
 DROP TABLE general_user CASCADE;
 CREATE TABLE general_user (
@@ -61,10 +62,11 @@ CREATE TABLE student_group (
   group_id SERIAL PRIMARY KEY,
   year INT NOT NULL,
   cycle season NOT NULL,
-  master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION,
+  master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION NOT NULL,
   -- students INT[] NOT NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
-  meeting_time DATE NOT NULL
+  meeting_day weekday NOT NULL,
+  meeting_time TIME NOT NULL
 );
 
 -- DROP TABLE student_group_relation CASCADE;

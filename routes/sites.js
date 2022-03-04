@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, isZipCode, keysToCamel } = require('./utils');
+const { isNumeric, isZipCode, keysToCamel, isPhoneNumber, addContact } = require('./utils');
 
 const router = Router();
 
@@ -9,7 +9,15 @@ router.get('/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
-    const site = await pool.query(`SELECT * FROM site WHERE site_id = $1`, [siteId]);
+    const site = await pool.query(
+      `SELECT site.*, json_agg(contact1) as "primaryContactInfo", json_agg(contact2.*) as "secondContactInfo"
+      FROM site
+        INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
+        LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
+      WHERE site_id = $1
+      GROUP BY site_id;`,
+      [siteId],
+    );
     res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -35,16 +43,23 @@ router.post('/', async (req, res) => {
       addressCity,
       addressZip,
       areaId,
-      primaryContactId,
-      secondContactId,
+      primaryContactInfo,
+      secondContactInfo,
       notes,
     } = req.body;
     isZipCode(addressZip, 'Zip code is invalid');
     isNumeric(areaId, 'Area Id must be a Number');
-    isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
-    if (secondContactId) {
-      isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
+    isPhoneNumber(primaryContactInfo.phoneNumber, 'Invalid Primary Phone Number');
+    if (secondContactInfo) {
+      isPhoneNumber(secondContactInfo.phoneNumber, 'Invalid Second Phone Number');
     }
+
+    const primaryContactId = await addContact(primaryContactInfo);
+    let secondContactId = null;
+    if (secondContactInfo) {
+      secondContactId = await addContact(secondContactInfo);
+    }
+
     const newSite = await db.query(
       `INSERT INTO site (
         site_name, address_street, address_city,
