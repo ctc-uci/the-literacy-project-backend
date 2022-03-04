@@ -67,12 +67,12 @@ CREATE TABLE student_group (
   meeting_time DATE NOT NULL
 );
 
-DROP TABLE student_group_relation CASCADE;
-CREATE TABLE student_group_relation (
-  student_id INT REFERENCES student(student_id) ON DELETE CASCADE NOT NULL,
-  group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
-  UNIQUE (student_id, group_id)
-);
+-- DROP TABLE student_group_relation CASCADE;
+-- CREATE TABLE student_group_relation (
+--   student_id INT REFERENCES student(student_id) ON DELETE CASCADE NOT NULL,
+--   group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
+--   UNIQUE (student_id, group_id)
+-- );
 
 DROP TABLE student CASCADE;
 CREATE TABLE student (
