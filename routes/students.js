@@ -29,15 +29,14 @@ router.get('/', async (req, res) => {
 // create a student
 router.post('/', async (req, res) => {
   try {
-    const { firstName, lastName, contactId, siteId, studentGroupId } = req.body;
-    isNumeric(contactId, 'Site Id must be a Number');
-    isNumeric(siteId, 'Contact Id must be a Number');
+    const { firstName, lastName, contactId, studentGroupId } = req.body;
+    isNumeric(contactId, 'Contact Id must be a Number');
     isNumeric(studentGroupId, 'Contact Id must be a Number');
     const newStudent = await pool.query(
-      `INSERT INTO student (first_name, last_name, contact_id, site_id, student_group_id)
-      VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO student (first_name, last_name, contact_id, student_group_id)
+      VALUES ($1, $2, $3, $4)
       RETURNING *;`,
-      [firstName, lastName, contactId, siteId, studentGroupId],
+      [firstName, lastName, contactId, studentGroupId],
     );
     res.status(200).send(keysToCamel(newStudent.rows[0]));
   } catch (err) {
@@ -50,18 +49,16 @@ router.put('/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     isNumeric(studentId, 'Student Id must be a Number');
-    const { firstName, lastName, contactId, siteId, studentGroupId } = req.body;
+    const { firstName, lastName, contactId, studentGroupId } = req.body;
     isNumeric(contactId, 'Contact Id must be a Number');
-    isNumeric(siteId, 'Site Id must be a Number');
     isNumeric(studentGroupId, 'Student Group Id must be a Number');
     const updatedStudent = await db.query(
       `UPDATE student
       SET first_name = $(firstName), last_name = $(lastName),
-          contact_id = $(contactId), site_id = $(siteId),
-          student_group_id = $(studentGroupId)
+          contact_id = $(contactId), student_group_id = $(studentGroupId)
       WHERE student_id = $(studentId)
       RETURNING *;`,
-      { firstName, lastName, contactId, siteId, studentGroupId, studentId },
+      { firstName, lastName, contactId, studentGroupId, studentId },
     );
     res.status(200).send(keysToCamel(updatedStudent[0]));
   } catch (err) {
