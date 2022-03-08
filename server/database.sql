@@ -4,6 +4,7 @@ DROP TYPE user_status CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
 CREATE TYPE season AS ENUM('winter', 'spring', 'summer', 'fall');
 CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
+CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 
 DROP TABLE general_user CASCADE;
 CREATE TABLE general_user (
@@ -26,7 +27,7 @@ CREATE TABLE tlp_user (
 DROP TABLE master_teacher_site_relation CASCADE;
 CREATE TABLE master_teacher_site_relation (
   user_id INT REFERENCES tlp_user(user_id) ON DELETE CASCADE NOT NULL,
-  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
+  site_id INT REFERENCES site(site_id) ON DELETE CASCADE NOT NULL,
   UNIQUE (user_id, site_id)
 );
 
@@ -55,18 +56,19 @@ CREATE TABLE student_group (
   group_id SERIAL PRIMARY KEY,
   year INT NOT NULL,
   cycle season NOT NULL,
-  master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION,
+  master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION NOT NULL,
   -- students INT[] NOT NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
-  meeting_time DATE NOT NULL
+  meeting_day weekday NOT NULL,
+  meeting_time TIME NOT NULL
 );
 
-DROP TABLE student_group_relation CASCADE;
-CREATE TABLE student_group_relation (
-  student_id INT REFERENCES student(student_id) ON DELETE CASCADE NOT NULL,
-  group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
-  UNIQUE (student_id, group_id)
-);
+-- DROP TABLE student_group_relation CASCADE;
+-- CREATE TABLE student_group_relation (
+--   student_id INT REFERENCES student(student_id) ON DELETE CASCADE NOT NULL,
+--   group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
+--   UNIQUE (student_id, group_id)
+-- );
 
 DROP TABLE student CASCADE;
 CREATE TABLE student (
@@ -74,8 +76,7 @@ CREATE TABLE student (
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
   contact_id INT REFERENCES general_user(user_id) ON DELETE NO ACTION NOT NULL,
-  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
-  student_group INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
+  student_group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
   pretest_r INT[],
   posttest_r INT[],
   pretest_a INT[],

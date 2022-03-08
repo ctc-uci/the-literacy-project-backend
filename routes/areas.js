@@ -1,6 +1,6 @@
 const { Router } = require('express');
-const pool = require('../server/db');
-const { isBoolean, isNumeric } = require('./utils');
+const { pool } = require('../server/db');
+const { isBoolean, isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();
 
@@ -10,7 +10,7 @@ router.get('/:areaId', async (req, res) => {
     const { areaId } = req.params;
     isNumeric(areaId, 'Area Id must be a Number');
     const area = await pool.query(`SELECT * FROM area WHERE area_id = $1;`, [areaId]);
-    res.status(200).send(area.rows[0]);
+    res.status(200).send(keysToCamel(area.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -20,7 +20,7 @@ router.get('/:areaId', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const areas = await pool.query('SELECT * FROM area;');
-    res.status(200).json(areas.rows);
+    res.status(200).json(keysToCamel(areas.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
       'INSERT INTO area (area_name, active) VALUES ($1, $2) RETURNING *;',
       [areaName, active],
     );
-    res.status(200).send(newArea.rows[0]);
+    res.status(200).send(keysToCamel(newArea.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -55,7 +55,7 @@ router.put('/:areaId', async (req, res) => {
       RETURNING *;`,
       [areaName, active, areaId],
     );
-    res.status(200).send(updatedArea.rows[0]);
+    res.status(200).send(keysToCamel(updatedArea.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -69,7 +69,7 @@ router.delete('/:areaId', async (req, res) => {
     const deletedArea = await pool.query(`DELETE FROM area WHERE area_id = $1 RETURNING *;`, [
       areaId,
     ]);
-    res.status(200).send(deletedArea.rows[0]);
+    res.status(200).send(keysToCamel(deletedArea.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
