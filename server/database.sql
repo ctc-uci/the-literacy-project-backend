@@ -23,12 +23,6 @@ CREATE TABLE tlp_user (
   active user_status NOT NULL
 );
 
--- DROP TABLE master_teacher CASCADE;
--- CREATE TABLE master_teacher (
---   user_id INT PRIMARY KEY REFERENCES tlp_user(user_id) ON DELETE CASCADE,
---   sites INT[]
--- );
-
 DROP TABLE master_teacher_site_relation CASCADE;
 CREATE TABLE master_teacher_site_relation (
   user_id INT REFERENCES tlp_user(user_id) ON DELETE CASCADE NOT NULL,
