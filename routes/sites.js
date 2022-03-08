@@ -9,7 +9,7 @@ const getSites = (allSites) =>
   FROM site
     INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
     LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
-  ${allSites ? '' : 'WHERE site_id = $1'};`;
+  ${allSites ? '' : 'WHERE site_id = $1'}`;
 
 // get a site by id
 router.get('/:siteId', async (req, res) => {
@@ -27,6 +27,18 @@ router.get('/:siteId', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const sites = await pool.query(getSites(true));
+    res.status(200).json(keysToCamel(sites.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// get all sites in an area
+router.get('/area/:areaId', async (req, res) => {
+  try {
+    const { areaId } = req.params;
+    isNumeric(areaId, 'Area Id must be a Number');
+    const sites = await pool.query(`${getSites(true)} WHERE site.area_id = $1`, [areaId]);
     res.status(200).json(keysToCamel(sites.rows));
   } catch (err) {
     res.status(400).send(err.message);
