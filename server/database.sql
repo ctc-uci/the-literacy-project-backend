@@ -24,12 +24,6 @@ CREATE TABLE tlp_user (
   active user_status NOT NULL
 );
 
--- DROP TABLE master_teacher CASCADE;
--- CREATE TABLE master_teacher (
---   user_id INT PRIMARY KEY REFERENCES tlp_user(user_id) ON DELETE CASCADE,
---   sites INT[]
--- );
-
 DROP TABLE master_teacher_site_relation CASCADE;
 CREATE TABLE master_teacher_site_relation (
   user_id INT REFERENCES tlp_user(user_id) ON DELETE CASCADE NOT NULL,
@@ -63,18 +57,10 @@ CREATE TABLE student_group (
   year INT NOT NULL,
   cycle season NOT NULL,
   master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION NOT NULL,
-  -- students INT[] NOT NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
   meeting_day weekday NOT NULL,
   meeting_time TIME NOT NULL
 );
-
--- DROP TABLE student_group_relation CASCADE;
--- CREATE TABLE student_group_relation (
---   student_id INT REFERENCES student(student_id) ON DELETE CASCADE NOT NULL,
---   group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
---   UNIQUE (student_id, group_id)
--- );
 
 DROP TABLE student CASCADE;
 CREATE TABLE student (

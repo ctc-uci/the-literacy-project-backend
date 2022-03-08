@@ -162,32 +162,4 @@ router.delete('/:siteId', async (req, res) => {
   }
 });
 
-// get all sites that have a student group in the given year
-// router.get('/:year', async (req, res) => {
-//   try {
-//     const { year } = req.params;
-//     const sites = await pool.query(
-//       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1)',
-//       [year],
-//     );
-//     res.status(200).json(sites.rows);
-//   } catch (err) {
-//     res.status(400).send(err.message);
-//   }
-// });
-
-// not tested yet
-// router.get('/:year/:cycle', async (req, res) => {
-//   try {
-//     const { year, cycle } = req.params;
-//     const sites = await pool.query(
-//       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1 AND cycle = $2)',
-//       [year, cycle],
-//     );
-//     res.status(200).send(sites.rows[0]);
-//   } catch (err) {
-//     res.status(400).send(err.message);
-//   }
-// });
-
 module.exports = router;
