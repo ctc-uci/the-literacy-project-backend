@@ -3,9 +3,10 @@ const { pool, db } = require('../server/db');
 
 const router = Router();
 
-router.post('/create', async (req, res) => {
+router.post('', async (req, res) => {
   try {
-    let teacherInfo = req.body;
+    const teacherInfo = req.body;
+
     await db.query(
       `INSERT INTO general_user
         (first_name, last_name, phone_number, email, title)
@@ -19,7 +20,7 @@ router.post('/create', async (req, res) => {
         teacherInfo.title,
       ],
     );
-    teacherInfo = await pool.query('SELECT * from general_user WHERE email = $1', [
+    const generalUserInfo = await pool.query('SELECT * from general_user WHERE email = $1', [
       teacherInfo.email,
     ]); // This query is needed to fetch the user id for updating the tlp_user table
     const newTLPUser = await db.query(
@@ -29,22 +30,26 @@ router.post('/create', async (req, res) => {
         ($1, $2, $3, $4)
       RETURNING *`,
       [
-        teacherInfo.rows[teacherInfo.rows.length - 1].user_id, // replaced index 0 with last element bc appended in chronological order
+        generalUserInfo.rows[generalUserInfo.rows.length - 1].user_id, // replaced index 0 with last element bc appended in chronological order
         0, // replace with actual firebase id; unfortunately this dummy value means only one user will be able to be made for now
         'master teacher',
         'pending', // by default, master teachers will be initialized as pending since they need to activate their email
       ],
     );
-    const newMasterTeacher = await pool.query(
-      `INSERT INTO master_teacher_site_relation
-        (user_id, sites)
-      VALUES
-        ($1, $2)
-      RETURNING *`,
-      [newTLPUser[0].user_id, []],
-    );
-
-    res.json(newMasterTeacher.rows[0]);
+    // need to insert for every site id
+    console.log(teacherInfo.sites);
+    teacherInfo.sites.forEach((site) => {
+      pool.query(
+        `INSERT INTO master_teacher_site_relation
+          (user_id, site_id)
+        VALUES
+          ($1, $2)
+        RETURNING *`,
+        [newTLPUser[0].user_id, site],
+      );
+      console.log('Inserted into MT table');
+    });
+    res.json(generalUserInfo.rows[0]); // one res.json for function? not sure how or if I should return for MT table insertion(s)
   } catch (err) {
     console.error(err.message);
   }
