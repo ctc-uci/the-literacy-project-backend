@@ -3,6 +3,7 @@ const { pool, db } = require('../server/db');
 
 const router = Router();
 
+// still need to  fix duplicate insertions
 router.post('', async (req, res) => {
   try {
     const teacherInfo = req.body;
@@ -20,9 +21,11 @@ router.post('', async (req, res) => {
         teacherInfo.title,
       ],
     );
+    // need to fix table / need some sort of duplicate check? bcuz returning multiple rows (same email)
     const generalUserInfo = await pool.query('SELECT * from general_user WHERE email = $1', [
       teacherInfo.email,
     ]); // This query is needed to fetch the user id for updating the tlp_user table
+    // console.log(generalUserInfo.rows);
     const newTLPUser = await db.query(
       `INSERT INTO tlp_user
         (user_id, firebase_id, position, active)
@@ -30,14 +33,14 @@ router.post('', async (req, res) => {
         ($1, $2, $3, $4)
       RETURNING *`,
       [
-        generalUserInfo.rows[generalUserInfo.rows.length - 1].user_id, // replaced index 0 with last element bc appended in chronological order
+        generalUserInfo.rows[generalUserInfo.rows.length - 1].user_id,
         0, // replace with actual firebase id; unfortunately this dummy value means only one user will be able to be made for now
         'master teacher',
         'pending', // by default, master teachers will be initialized as pending since they need to activate their email
       ],
     );
-    // need to insert for every site id
-    console.log(teacherInfo.sites);
+
+    // insert new row into MTSR table for each site in json
     teacherInfo.sites.forEach((site) => {
       pool.query(
         `INSERT INTO master_teacher_site_relation
@@ -49,7 +52,7 @@ router.post('', async (req, res) => {
       );
       console.log('Inserted into MT table');
     });
-    res.json(generalUserInfo.rows[0]); // one res.json for function? not sure how or if I should return for MT table insertion(s)
+    res.json(generalUserInfo.rows[generalUserInfo.rows.length - 1]); // one res.json for function? not sure how or if I should return for MT table insertion(s)
   } catch (err) {
     console.error(err.message);
   }
