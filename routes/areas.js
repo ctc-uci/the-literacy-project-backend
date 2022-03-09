@@ -1,33 +1,85 @@
 const { Router } = require('express');
-const pool = require('../server/db');
+const { pool } = require('../server/db');
+const { isBoolean, isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();
 
-router.post('/create', async (req, res) => {
+/*
+Notes:
+Do not think we need a get areas by year because can just
+use the get all areas request then filter based on year on frontend
+*/
+
+// get an area by id
+router.get('/:areaId', async (req, res) => {
   try {
-    const schoolDistrictName = req.body.district_name;
-    console.log(schoolDistrictName);
-    const newSchoolDistrict = await pool.query(
-      'INSERT INTO school_district (district_name) VALUES($1) RETURNING *',
-      [schoolDistrictName],
-    );
-    res.json(newSchoolDistrict);
-    // console.log(id);
+    const { areaId } = req.params;
+    isNumeric(areaId, 'Area Id must be a Number');
+    const area = await pool.query(`SELECT * FROM area WHERE area_id = $1;`, [areaId]);
+    res.status(200).send(keysToCamel(area.rows[0]));
   } catch (err) {
-    console.error(err.message);
+    res.status(400).send(err.message);
   }
 });
 
-router.get('', async (req, res) => {
+// get all areas
+router.get('/', async (req, res) => {
   try {
-    console.log('hello');
-    const allSchools = await pool.query('SELECT * FROM school_district');
-    res.json(allSchools.rows);
-    // const { school_id } = req.body.school_id
+    const areas = await pool.query('SELECT * FROM area;');
+    res.status(200).json(keysToCamel(areas.rows));
   } catch (err) {
-    console.error(err.message);
+    res.status(400).send(err.message);
   }
-  // res.json('This is the school page');
+});
+
+// create an area
+router.post('/', async (req, res) => {
+  try {
+    const { areaName, active } = req.body;
+    isBoolean(active, 'Active must be a boolean value');
+    const newArea = await pool.query(
+      'INSERT INTO area (area_name, active) VALUES ($1, $2) RETURNING *;',
+      [areaName, active],
+    );
+    res.status(200).send(keysToCamel(newArea.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// update an area
+router.put('/:areaId', async (req, res) => {
+  try {
+    const { areaId } = req.params;
+    isNumeric(areaId, 'Area Id must be a Number');
+    const { areaName, active } = req.body;
+    isBoolean(active, 'Active must be a boolean value');
+    const updatedArea = await pool.query(
+      `UPDATE area
+      SET area_name = $1, active = $2
+      WHERE area_id = $3
+      RETURNING *;`,
+      [areaName, active, areaId],
+    );
+    res.status(200).send(keysToCamel(updatedArea.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// delete an area
+// *does not delete corresponding sites*
+router.delete('/:areaId', async (req, res) => {
+  try {
+    const { areaId } = req.params;
+    isNumeric(areaId, 'Area Id must be a Number');
+    const deletedArea = await pool.query(`DELETE FROM area WHERE area_id = $1 RETURNING *;`, [
+      areaId,
+    ]);
+    res.status(200).send(keysToCamel(deletedArea.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
 });
 
 module.exports = router;
