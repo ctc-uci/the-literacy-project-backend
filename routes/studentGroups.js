@@ -51,21 +51,6 @@ router.get('/site/:siteId', async (req, res) => {
   }
 });
 
-// get all students groups for a given teacher
-router.get('/teacher/:teacherId', async (req, res) => {
-  try {
-    const { teacherId } = req.params;
-    isNumeric(teacherId, 'Teacher Id must be a Number');
-    const studentGroup = await pool.query(
-      `${getStudentGroups(true)} WHERE student_group.master_teacher_id = $1`,
-      [teacherId],
-    );
-    res.status(200).json(keysToCamel(studentGroup.rows));
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
-
 // add a student group
 router.post('/', async (req, res) => {
   try {
