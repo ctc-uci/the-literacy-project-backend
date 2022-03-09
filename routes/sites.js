@@ -1,6 +1,13 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, isZipCode, keysToCamel, isPhoneNumber, addContact } = require('./utils');
+const {
+  isNumeric,
+  isZipCode,
+  keysToCamel,
+  isPhoneNumber,
+  addContact,
+  isBoolean,
+} = require('./utils');
 
 const router = Router();
 
@@ -56,11 +63,13 @@ router.post('/', async (req, res) => {
       areaId,
       primaryContactInfo,
       secondContactInfo,
+      active,
       notes,
     } = req.body;
     isZipCode(addressZip, 'Zip code is invalid');
     isNumeric(areaId, 'Area Id must be a Number');
     isPhoneNumber(primaryContactInfo.phoneNumber, 'Invalid Primary Phone Number');
+    isBoolean(active, 'Active is not a boolean');
     if (secondContactInfo) {
       isPhoneNumber(secondContactInfo.phoneNumber, 'Invalid Second Phone Number');
     }
@@ -76,11 +85,13 @@ router.post('/', async (req, res) => {
         site_name, address_street, address_city,
         address_zip, area_id, primary_contact_id
         ${secondContactId ? ', second_contact_id' : ''}
+        , active
         ${notes ? ', notes' : ''})
       VALUES (
         $(siteName), $(addressStreet), $(addressCity),
         $(addressZip), $(areaId), $(primaryContactId)
         ${secondContactId ? ', $(secondContactId)' : ''}
+        , active
         ${notes ? ', $(notes)' : ''})
       RETURNING *`,
       {
@@ -91,6 +102,7 @@ router.post('/', async (req, res) => {
         areaId,
         primaryContactId,
         secondContactId,
+        active,
         notes,
       },
     );

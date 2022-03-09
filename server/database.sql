@@ -2,7 +2,7 @@ DROP TYPE pos CASCADE;
 DROP TYPE season CASCADE;
 DROP TYPE user_status CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
-CREATE TYPE season AS ENUM('winter', 'spring', 'summer', 'fall');
+CREATE TYPE cycles AS ENUM('1', '2', '3', '4');
 CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
 CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 
@@ -45,9 +45,10 @@ CREATE TABLE site (
   address_street VARCHAR(255) NOT NULL,
   address_city VARCHAR(255) NOT NULL,
   address_zip VARCHAR(5) NOT NULL,
-  area_id INT REFERENCES area(area_id) ON DELETE CASCADE NOT NULL,
+  area_id INT REFERENCES area(area_id) ON DELETE SET NULL NOT NULL,
   primary_contact_id INT REFERENCES general_user(user_id) NOT NULL,
   second_contact_id INT REFERENCES general_user(user_id),
+  active BOOLEAN NOT NULL,
   notes VARCHAR(255)
 );
 
@@ -55,7 +56,7 @@ DROP TABLE student_group CASCADE;
 CREATE TABLE student_group (
   group_id SERIAL PRIMARY KEY,
   year INT NOT NULL,
-  cycle season NOT NULL,
+  cycle cycles NOT NULL,
   master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION NOT NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
   meeting_day weekday NOT NULL,

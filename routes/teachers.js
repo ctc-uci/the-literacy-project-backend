@@ -13,7 +13,7 @@ const getTeachers = (allTeachers) =>
     LEFT JOIN (SELECT m.user_id, array_agg(m.site_id ORDER BY m.site_id ASC) AS sites
       FROM master_teacher_site_relation AS m
       GROUP BY m.user_id) AS relation ON relation.user_id = tlp_user.user_id
-  WHERE position = 'master teacher';`;
+  WHERE position = 'master teacher'`;
 
 // get a teacher by id
 router.get('/:teacherId', async (req, res) => {
@@ -32,6 +32,23 @@ router.get('/', async (req, res) => {
   try {
     const allTeachers = await pool.query(getTeachers(true));
     res.status(200).json(keysToCamel(allTeachers.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// get all teachers by site
+router.get('/site/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const teacher = await pool.query(
+      `${getTeachers(
+        true,
+      )} AND tlp_user.user_id in (SELECT DISTINCT user_id FROM master_teacher_site_relation WHERE site_id = $1)`,
+      [siteId],
+    );
+    res.status(200).json(keysToCamel(teacher.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }
