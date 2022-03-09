@@ -1,6 +1,13 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, isZipCode, keysToCamel, isPhoneNumber, addContact } = require('./utils');
+const {
+  isNumeric,
+  isZipCode,
+  keysToCamel,
+  isPhoneNumber,
+  addContact,
+  isBoolean,
+} = require('./utils');
 
 const router = Router();
 
@@ -9,7 +16,7 @@ const getSites = (allSites) =>
   FROM site
     INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
     LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
-  ${allSites ? '' : 'WHERE site_id = $1'};`;
+  ${allSites ? '' : 'WHERE site_id = $1'}`;
 
 // get a site by id
 router.get('/:siteId', async (req, res) => {
@@ -33,6 +40,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// get all sites in an area
+router.get('/area/:areaId', async (req, res) => {
+  try {
+    const { areaId } = req.params;
+    isNumeric(areaId, 'Area Id must be a Number');
+    const sites = await pool.query(`${getSites(true)} WHERE site.area_id = $1`, [areaId]);
+    res.status(200).json(keysToCamel(sites.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // create a site
 router.post('/', async (req, res) => {
   try {
@@ -44,11 +63,13 @@ router.post('/', async (req, res) => {
       areaId,
       primaryContactInfo,
       secondContactInfo,
+      active,
       notes,
     } = req.body;
     isZipCode(addressZip, 'Zip code is invalid');
     isNumeric(areaId, 'Area Id must be a Number');
     isPhoneNumber(primaryContactInfo.phoneNumber, 'Invalid Primary Phone Number');
+    isBoolean(active, 'Active is not a boolean');
     if (secondContactInfo) {
       isPhoneNumber(secondContactInfo.phoneNumber, 'Invalid Second Phone Number');
     }
@@ -64,11 +85,13 @@ router.post('/', async (req, res) => {
         site_name, address_street, address_city,
         address_zip, area_id, primary_contact_id
         ${secondContactId ? ', second_contact_id' : ''}
+        , active
         ${notes ? ', notes' : ''})
       VALUES (
         $(siteName), $(addressStreet), $(addressCity),
         $(addressZip), $(areaId), $(primaryContactId)
         ${secondContactId ? ', $(secondContactId)' : ''}
+        , active
         ${notes ? ', $(notes)' : ''})
       RETURNING *`,
       {
@@ -79,6 +102,7 @@ router.post('/', async (req, res) => {
         areaId,
         primaryContactId,
         secondContactId,
+        active,
         notes,
       },
     );
@@ -139,6 +163,7 @@ router.put('/:siteId', async (req, res) => {
 });
 
 // delete site
+// does not delete area, master teacher, or students from site
 router.delete('/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;
@@ -150,32 +175,16 @@ router.delete('/:siteId', async (req, res) => {
   }
 });
 
-// get all sites that have a student group in the given year
-// router.get('/:year', async (req, res) => {
-//   try {
-//     const { year } = req.params;
-//     const sites = await pool.query(
-//       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1)',
-//       [year],
-//     );
-//     res.status(200).json(sites.rows);
-//   } catch (err) {
-//     res.status(400).send(err.message);
-//   }
-// });
-
-// not tested yet
-// router.get('/:year/:cycle', async (req, res) => {
-//   try {
-//     const { year, cycle } = req.params;
-//     const sites = await pool.query(
-//       'SELECT * FROM site WHERE site_id IN (SELECT DISTINCT site_id FROM student_group WHERE year = $1 AND cycle = $2)',
-//       [year, cycle],
-//     );
-//     res.status(200).send(sites.rows[0]);
-//   } catch (err) {
-//     res.status(400).send(err.message);
-//   }
-// });
+// delete site
+router.delete('/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const site = await pool.query('DELETE FROM site WHERE site_id = $1 RETURNING *', [siteId]);
+    res.status(200).send(keysToCamel(site.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
 
 module.exports = router;

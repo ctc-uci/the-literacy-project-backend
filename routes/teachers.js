@@ -14,7 +14,7 @@ const getTeachers = (allTeachers) =>
     LEFT JOIN (SELECT m.user_id, array_agg(m.site_id ORDER BY m.site_id ASC) AS sites
       FROM master_teacher_site_relation AS m
       GROUP BY m.user_id) AS relation ON relation.user_id = tlp_user.user_id
-  WHERE position = 'master teacher';`;
+  WHERE position = 'master teacher'`;
 
 // get a teacher by id
 router.get('/:teacherId', async (req, res) => {
@@ -33,6 +33,23 @@ router.get('/', async (req, res) => {
   try {
     const allTeachers = await pool.query(getTeachers(true));
     res.status(200).json(keysToCamel(allTeachers.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// get all teachers by site
+router.get('/site/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const teacher = await pool.query(
+      `${getTeachers(
+        true,
+      )} AND tlp_user.user_id in (SELECT DISTINCT user_id FROM master_teacher_site_relation WHERE site_id = $1)`,
+      [siteId],
+    );
+    res.status(200).json(keysToCamel(teacher.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -57,7 +74,7 @@ router.post('/', async (req, res) => {
       RETURNING *`,
       [
         teacher.rows[0].user_id,
-        firebaseId, // replace with actual firebase id; unfortunately this dummy value means only one user will be able to be made for now
+        firebaseId,
         'master teacher',
         'pending', // by default, master teachers will be initialized as pending since they need to activate their email
       ],
@@ -132,6 +149,7 @@ router.delete('/remove-site/:teacherId', async (req, res) => {
   }
 });
 
+// delete a teacher
 router.delete('/:teacherId', async (req, res) => {
   try {
     const { teacherId } = req.params;
@@ -143,6 +161,30 @@ router.delete('/:teacherId', async (req, res) => {
       [teacherId],
     );
     res.status(200).send(keysToCamel(deletedTeacher.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// get a teachers information and their site information
+router.get('/all/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const allTeachers = await pool.query(
+      `SELECT tlp_user.*, gen.first_name, gen.last_name, gen.phone_number, gen.email, relation.sites
+    FROM tlp_user
+      INNER JOIN
+        (SELECT * FROM general_user WHERE general_user.user_id = $1)
+        AS gen ON gen.user_id = tlp_user.user_id
+      LEFT JOIN (SELECT m.user_id, array_agg(to_json(site.*) ORDER BY site.site_id) AS sites
+          FROM master_teacher_site_relation as m
+            INNER JOIN site ON site.site_id = m.site_id
+          GROUP BY m.user_id
+          ) AS relation ON relation.user_id = tlp_user.user_id
+    WHERE position = 'master teacher';`,
+      [userId],
+    );
+    res.status(200).json(keysToCamel(allTeachers.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }

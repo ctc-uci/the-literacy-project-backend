@@ -4,6 +4,12 @@ const { isBoolean, isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();
 
+/*
+Notes:
+Do not think we need a get areas by year because can just
+use the get all areas request then filter based on year on frontend
+*/
+
 // get an area by id
 router.get('/:areaId', async (req, res) => {
   try {
@@ -61,7 +67,7 @@ router.put('/:areaId', async (req, res) => {
   }
 });
 
-// delete an area
+// *does not delete corresponding sites*
 router.delete('/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;

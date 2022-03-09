@@ -11,7 +11,7 @@ const getStudentGroups = (allGroups) =>
             FROM student AS s
             GROUP BY s.student_group_id) AS relation
         ON relation.student_group_id = student_group.group_id ${
-          allGroups ? '' : ' WHERE student_group.group_id = $1;'
+          allGroups ? '' : ' WHERE student_group.group_id = $1'
         }`;
 
 // get a student group by id
@@ -36,6 +36,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+// get all students groups for a given site
+router.get('/site/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const studentGroup = await pool.query(
+      `${getStudentGroups(true)} WHERE student_group.site_id = $1`,
+      [siteId],
+    );
+    res.status(200).json(keysToCamel(studentGroup.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // add a student group
 router.post('/', async (req, res) => {
   try {
@@ -45,7 +60,7 @@ router.post('/', async (req, res) => {
     isNumeric(siteId, 'Site Id must be a Number');
 
     const group = await pool.query(
-      `INSERT INTO student_group (year, cycle, master_teacher_id, site_id, meeting_time)
+      `INSERT INTO student_group (year, cycle, master_teacher_id, site_id, meeting_day, meeting_time)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;`,
       [year, cycle, masterTeacherId, siteId, meetingDay, meetingTime],

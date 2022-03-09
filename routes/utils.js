@@ -25,11 +25,12 @@ const isAlphaNumeric = (value, errorMessage) => {
 };
 
 const isPhoneNumber = (value, errorMessage) => {
-  if (!/^\d+$/.test(value) || value.length !== 10) {
+  if (!/^\d+$/.test(value) || value.length > 15) {
     throw new Error(errorMessage);
   }
 };
 
+// toCamel, isArray, and isObject are helper functions used within utils only
 const toCamel = (s) => {
   return s.replace(/([-_][a-z])/g, ($1) => {
     return $1.toUpperCase().replace('-', '').replace('_', '');
@@ -44,6 +45,8 @@ const isObject = (o) => {
   return o === Object(o) && !isArray(o) && typeof o !== 'function';
 };
 
+// Database columns are in snake case. JavaScript is suppose to be in camel case
+// This function converts the keys from the sql query to camel case so it follows JavaScript conventions
 const keysToCamel = (data) => {
   if (isObject(data)) {
     const newData = {};
