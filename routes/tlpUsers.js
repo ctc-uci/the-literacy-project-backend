@@ -16,4 +16,22 @@ router.get('/:firebaseId', async (req, res) => {
   }
 });
 
+// update a user's active status to 'active'
+router.put('/:firebaseId', async (req, res) => {
+  try {
+    const { firebaseId } = req.params;
+    isAlphaNumeric(firebaseId, 'Firebase Id must be AlphaNumeric');
+    const user = await pool.query(
+      `UPDATE tlp_user
+      SET active = 'active'
+      WHERE firebase_id = $1
+      RETURNING *;`,
+      [firebaseId],
+    );
+    res.status(200).send(keysToCamel(user.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 module.exports = router;

@@ -25,7 +25,7 @@ const isAlphaNumeric = (value, errorMessage) => {
 };
 
 const isPhoneNumber = (value, errorMessage) => {
-  if (!/^\d+$/.test(value) || value.length !== 9) {
+  if (!/^\d+$/.test(value) || value.length !== 10) {
     throw new Error(errorMessage);
   }
 };
