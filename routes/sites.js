@@ -151,6 +151,7 @@ router.put('/:siteId', async (req, res) => {
 });
 
 // delete site
+// does not delete area, master teacher, or students from site
 router.delete('/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;

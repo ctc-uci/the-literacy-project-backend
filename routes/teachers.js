@@ -147,7 +147,6 @@ router.delete('/:teacherId', async (req, res) => {
 });
 
 // get a teachers information and their site information
-// this endpoint may not be needed
 router.get('/all/:userId', async (req, res) => {
   try {
     const { userId } = req.params;

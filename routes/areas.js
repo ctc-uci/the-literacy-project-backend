@@ -68,6 +68,7 @@ router.put('/:areaId', async (req, res) => {
 });
 
 // delete an area
+// *does not delete corresponding sites*
 router.delete('/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;
