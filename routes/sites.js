@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
         $(siteName), $(addressStreet), $(addressCity),
         $(addressZip), $(areaId), $(primaryContactId)
         ${secondContactId ? ', $(secondContactId)' : ''}
-        , active
+        , $(active)
         ${notes ? ', $(notes)' : ''})
       RETURNING *`,
       {
