@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const { pool } = require('../server/db');
 const { isNumeric, isAlphaNumeric, isPhoneNumber, keysToCamel } = require('./utils');
+const firebaseAdmin = require('../firebase');
 
 const router = Router();
 
@@ -153,6 +154,8 @@ router.delete('/:teacherId', async (req, res) => {
   try {
     const { teacherId } = req.params;
     isNumeric(teacherId, 'Teacher Id must be a Number');
+    const tlpUser = await pool.query(`SELECT * FROM tlp_user WHERE user_id = $1`, [teacherId]);
+    await firebaseAdmin.auth().deleteUser(tlpUser.rows[0].firebase_id);
     const deletedTeacher = await pool.query(
       'DELETE FROM general_user WHERE user_id = $1 RETURNING *;',
       [teacherId],
