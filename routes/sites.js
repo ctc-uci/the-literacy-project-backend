@@ -175,16 +175,4 @@ router.delete('/:siteId', async (req, res) => {
   }
 });
 
-// delete site
-router.delete('/:siteId', async (req, res) => {
-  try {
-    const { siteId } = req.params;
-    isNumeric(siteId, 'Site Id must be a Number');
-    const site = await pool.query('DELETE FROM site WHERE site_id = $1 RETURNING *', [siteId]);
-    res.status(200).send(keysToCamel(site.rows[0]));
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
-
 module.exports = router;
