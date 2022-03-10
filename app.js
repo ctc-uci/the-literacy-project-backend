@@ -3,7 +3,6 @@ const cors = require('cors');
 
 require('dotenv').config();
 
-// const dashboardRouter = require('./routes/dashboard');
 // const settingsRouter = require('./routes/settings');
 const teachers = require('./routes/teachers');
 const sites = require('./routes/sites');
