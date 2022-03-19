@@ -18,10 +18,18 @@ CREATE TABLE general_user (
 
 DROP TABLE tlp_user CASCADE;
 CREATE TABLE tlp_user (
-  user_id INT PRIMARY KEY REFERENCES general_user(user_id) ON DELETE CASCADE,
-  firebase_id VARCHAR(128) NOT NULL,
+  user_id INT PRIMARY KEY REFERENCES general_user(user_id) ON DELETE CASCADE NOT NULL,
+  firebase_id VARCHAR(128) UNIQUE NOT NULL,
   position pos NOT NULL,
   active user_status NOT NULL
+);
+
+DROP TABLE invites CASCADE;
+CREATE TABLE invites (
+  invite_id VARCHAR(255) PRIMARY KEY NOT NULL,
+  firebase_id VARCHAR(128) REFERENCES tlp_user(firebase_id) ON DELETE CASCADE NOT NULL,
+  expire_time timestamp without time zone NOT NULL,
+  valid_invite boolean NOT NULL
 );
 
 DROP TABLE master_teacher_site_relation CASCADE;

@@ -24,6 +24,12 @@ const isAlphaNumeric = (value, errorMessage) => {
   }
 };
 
+const isNanoId = (value, errorMessage) => {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) {
+    throw new Error(errorMessage);
+  }
+};
+
 const isPhoneNumber = (value, errorMessage) => {
   if (!/^\d+$/.test(value) || value.length > 15) {
     throw new Error(errorMessage);
@@ -88,4 +94,5 @@ module.exports = {
   isPhoneNumber,
   keysToCamel,
   addContact,
+  isNanoId,
 };
