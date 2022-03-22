@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool } = require('../server/db');
-const { isNumeric, isAlphaNumeric, isPhoneNumber, keysToCamel } = require('./utils');
+const { isNumeric, isAlphaNumeric, isPhoneNumber, isNanoId, keysToCamel } = require('./utils');
 const firebaseAdmin = require('../firebase');
 
 const router = Router();
@@ -38,9 +38,10 @@ router.get('/', async (req, res) => {
 // create an admin
 router.post('/', async (req, res) => {
   try {
-    const { firebaseId, firstName, lastName, phoneNumber, email } = req.body;
+    const { firebaseId, firstName, lastName, phoneNumber, email, inviteId } = req.body;
     isAlphaNumeric(firebaseId, 'Firebase ID must be AlphaNumeric');
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
+    isNanoId(inviteId, 'Invalid Invite Id Format');
     const admin = await pool.query(
       `INSERT INTO general_user (first_name, last_name, phone_number, email)
       VALUES ($1, $2, $3, $4)
@@ -55,9 +56,13 @@ router.post('/', async (req, res) => {
         admin.rows[0].user_id,
         firebaseId,
         'admin',
-        'pending', // admin status is pending until email is verified
+        'active', // verified by default since it was through invite
       ],
     );
+
+    // remove used invite from invites table
+    await pool.query(`DELETE FROM invites WHERE invite_id = $1 RETURNING *;`, [inviteId]);
+
     const addedAdmin = await pool.query(getAdmins(false), [admin.rows[0].user_id]);
     res.status(200).send(keysToCamel(addedAdmin.rows[0]));
   } catch (err) {

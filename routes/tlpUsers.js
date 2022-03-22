@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool } = require('../server/db');
-const { isAlphaNumeric, isNanoId, keysToCamel } = require('./utils');
+const { isAlphaNumeric, isNanoId, isPhoneNumber, keysToCamel } = require('./utils');
 const admin = require('../firebase');
 
 const router = Router();
@@ -33,13 +33,21 @@ router.get('/invite/:inviteId', async (req, res) => {
 });
 
 // add a new invite into the invite table for the TLP user
+// if given email is already associated with an account, return an error
 router.post('/new-invite', async (req, res) => {
   try {
-    const { inviteId, firebaseId } = req.body;
-    isNanoId(inviteId, 'Invite Id must be a NanoId');
+    const { inviteId, email, position, firstName, lastName, phoneNumber } = req.body;
+    isNanoId(inviteId, 'Invalid Invite Id Format');
+    isPhoneNumber(phoneNumber, 'Invalid Phone Number');
+
+    const existingEmail = await pool.query(`SELECT * FROM general_user WHERE email = $1`, [email]);
+    if (existingEmail.rows.length > 0) {
+      throw new Error('There is already an existing account with that email.');
+    }
+
     const invite = await pool.query(
-      `INSERT INTO invites VALUES ($1, $2, NOW() + INTERVAL '7 days', $3) RETURNING *;`,
-      [inviteId, firebaseId, true],
+      `INSERT INTO invites VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '7 days', $7) RETURNING *;`,
+      [inviteId, email, position, firstName, lastName, phoneNumber, true],
     );
     res.status(200).send(keysToCamel(invite.rows[0]));
   } catch (err) {
@@ -48,37 +56,39 @@ router.post('/new-invite', async (req, res) => {
 });
 
 // invite ID should be guaranteed to be valid when calling this route
-// update the password for the user and remove invite from invites table
-// also update status to active
+// creates Firebase account with email and password and set email verified to true
+// returns all necessary data to create account in respective tables for admin and master teacher
 router.post('/complete-creation', async (req, res) => {
   try {
     const { inviteId, password } = req.body;
-    isNanoId(inviteId, 'Invite Id must be a NanoId');
-    // get firebase id from invites to update password
-    const user = await pool.query(
+    isNanoId(inviteId, 'Invalid Invite Id Format');
+    const invitedUser = await pool.query(
       `SELECT * FROM invites WHERE invite_id = $1 AND valid_invite = true AND NOW() < expire_time;`,
       [inviteId],
     );
-    const firebaseId = user.rows[0].firebase_id;
-    await admin.auth().updateUser(firebaseId, {
+    const invite = invitedUser.rows[0];
+    const newUserInfo = keysToCamel(invite);
+
+    const user = await admin.auth().createUser({
+      email: newUserInfo.email,
       emailVerified: true,
       password,
     });
 
-    // update status to active
-    await pool.query(
-      `UPDATE tlp_user
-      SET active = 'active'
-      WHERE firebase_id = $1
-      RETURNING *;`,
-      [firebaseId],
-    );
+    newUserInfo.firebaseId = user.uid;
 
-    // remove used invite from invites table
-    const deletedInvite = await pool.query(
-      `DELETE FROM invites WHERE invite_id = $1 RETURNING *;`,
-      [inviteId],
-    );
+    res.status(200).send(keysToCamel(newUserInfo));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+router.delete('/invite/:inviteId', async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+    isNanoId(inviteId, 'Invalid Invite Id Format');
+
+    const deletedInvite = await pool.query(`DELETE FROM invites WHERE invite_id = $1`, [inviteId]);
 
     res.status(200).send(keysToCamel(deletedInvite.rows[0]));
   } catch (err) {

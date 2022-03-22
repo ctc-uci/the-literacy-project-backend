@@ -27,7 +27,11 @@ CREATE TABLE tlp_user (
 DROP TABLE invites CASCADE;
 CREATE TABLE invites (
   invite_id VARCHAR(255) PRIMARY KEY NOT NULL,
-  firebase_id VARCHAR(128) REFERENCES tlp_user(firebase_id) ON DELETE CASCADE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  position pos NOT NULL,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  phone_number VARCHAR(15) NOT NULL,
   expire_time timestamp without time zone NOT NULL,
   valid_invite boolean NOT NULL
 );
