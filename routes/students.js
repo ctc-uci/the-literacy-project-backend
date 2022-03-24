@@ -50,17 +50,26 @@ router.get('/teacher/:teacherId', async (req, res) => {
 // create a student
 router.post('/', async (req, res) => {
   try {
-    const { firstName, lastName, contactId, studentGroupId } = req.body;
+    console.log('hello');
+    const { firstName, lastName, contactId, studentGroupId, ethnicity } = req.body;
     isNumeric(contactId, 'Contact Id must be a Number');
-    isNumeric(studentGroupId, 'Contact Id must be a Number');
+    isNumeric(studentGroupId, 'Student Group Id must be a Number');
+    console.log(req.body);
+    console.log(firstName);
+    console.log(lastName);
+    console.log(contactId);
+    console.log(studentGroupId);
+    console.log(ethnicity);
     const newStudent = await pool.query(
-      `INSERT INTO student (first_name, last_name, contact_id, student_group_id)
-      VALUES ($1, $2, $3, $4)
+      `INSERT INTO student (first_name, last_name, contact_id, student_group_id, ethnicity)
+      VALUES ($1, $2, $3, $4, ${ethnicity ? ', ethnicity = $(ethnicity)' : ''})
       RETURNING *;`,
-      [firstName, lastName, contactId, studentGroupId],
+      [firstName, lastName, contactId, studentGroupId, ethnicity],
     );
+    console.log('bye');
     res.status(200).send(keysToCamel(newStudent.rows[0]));
   } catch (err) {
+    console.log('err');
     res.status(400).send(err.message);
   }
 });
@@ -70,16 +79,17 @@ router.put('/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     isNumeric(studentId, 'Student Id must be a Number');
-    const { firstName, lastName, contactId, studentGroupId } = req.body;
+    const { firstName, lastName, contactId, studentGroupId, ethnicity } = req.body;
     isNumeric(contactId, 'Contact Id must be a Number');
     isNumeric(studentGroupId, 'Student Group Id must be a Number');
     const updatedStudent = await db.query(
       `UPDATE student
       SET first_name = $(firstName), last_name = $(lastName),
-          contact_id = $(contactId), student_group_id = $(studentGroupId)
+          contact_id = $(contactId), student_group_id = $(studentGroupId),
+          ${5 ? ', ethnicity = $(5)' : ''}
       WHERE student_id = $(studentId)
       RETURNING *;`,
-      { firstName, lastName, contactId, studentGroupId, studentId },
+      { firstName, lastName, contactId, studentGroupId, ethnicity, studentId },
     );
     res.status(200).send(keysToCamel(updatedStudent[0]));
   } catch (err) {

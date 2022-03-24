@@ -4,6 +4,7 @@ DROP TYPE user_status CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
 CREATE TYPE cycles AS ENUM('1', '2', '3', '4');
 CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
+CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'hispanic or latino', 'american indian or alaska native');
 CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 
 DROP TABLE general_user CASCADE;
@@ -70,6 +71,7 @@ CREATE TABLE student (
   last_name VARCHAR(255) NOT NULL,
   contact_id INT REFERENCES general_user(user_id) ON DELETE NO ACTION NOT NULL,
   student_group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION NOT NULL,
+  ethnicity ethnicities[],
   pretest_r INT[],
   posttest_r INT[],
   pretest_a INT[],
