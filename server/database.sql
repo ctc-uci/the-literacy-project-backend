@@ -4,7 +4,7 @@ DROP TYPE user_status CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
 CREATE TYPE cycles AS ENUM('1', '2', '3', '4');
 CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
-CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'hispanic or latino', 'american indian or alaska native');
+CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'latinx', 'american indian or alaska native');
 CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 
 DROP TABLE general_user CASCADE;
