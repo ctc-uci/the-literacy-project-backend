@@ -50,31 +50,23 @@ router.get('/teacher/:teacherId', async (req, res) => {
 // create a student
 router.post('/', async (req, res) => {
   try {
-    console.log('hello');
     const { firstName, lastName, contactId, studentGroupId, ethnicity } = req.body;
     isNumeric(contactId, 'Contact Id must be a Number');
     isNumeric(studentGroupId, 'Student Group Id must be a Number');
-    console.log(req.body);
-    console.log(firstName);
-    console.log(lastName);
-    console.log(contactId);
-    console.log(studentGroupId);
-    console.log(ethnicity);
+    const eth = ethnicity || [];
     const newStudent = await pool.query(
       `INSERT INTO student (first_name, last_name, contact_id, student_group_id, ethnicity)
-      VALUES ($1, $2, $3, $4, ${ethnicity ? ', ethnicity = $(ethnicity)' : ''})
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *;`,
-      [firstName, lastName, contactId, studentGroupId, ethnicity],
+      [firstName, lastName, contactId, studentGroupId, eth],
     );
-    console.log('bye');
     res.status(200).send(keysToCamel(newStudent.rows[0]));
   } catch (err) {
-    console.log('err');
     res.status(400).send(err.message);
   }
 });
 
-// update a student's general contact
+// update a student's general info
 router.put('/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -82,14 +74,14 @@ router.put('/:studentId', async (req, res) => {
     const { firstName, lastName, contactId, studentGroupId, ethnicity } = req.body;
     isNumeric(contactId, 'Contact Id must be a Number');
     isNumeric(studentGroupId, 'Student Group Id must be a Number');
-    const updatedStudent = await db.query(
+    const eth = ethnicity || [];
+    const updatedStudent = await pool.query(
       `UPDATE student
-      SET first_name = $(firstName), last_name = $(lastName),
-          contact_id = $(contactId), student_group_id = $(studentGroupId),
-          ${5 ? ', ethnicity = $(5)' : ''}
-      WHERE student_id = $(studentId)
+      SET first_name = $1, last_name = $2, contact_id = $3,
+        student_group_id = $4, ethnicity = $5
+      WHERE student_id = $6
       RETURNING *;`,
-      { firstName, lastName, contactId, studentGroupId, ethnicity, studentId },
+      [firstName, lastName, contactId, studentGroupId, eth, studentId],
     );
     res.status(200).send(keysToCamel(updatedStudent[0]));
   } catch (err) {
@@ -127,7 +119,7 @@ router.delete('/:studentId', async (req, res) => {
     isNumeric(studentId, 'Student Id must be a Number');
     const deletedStudent = await pool.query(
       `DELETE FROM student WHERE student_id = $1 RETURNING *;`,
-      studentId,
+      [studentId],
     );
     res.status(200).send(keysToCamel(deletedStudent.rows[0]));
   } catch (err) {
