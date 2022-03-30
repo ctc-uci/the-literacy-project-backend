@@ -35,7 +35,7 @@ CREATE TABLE master_teacher_site_relation (
 DROP TABLE area CASCADE;
 CREATE TABLE area (
   area_id SERIAL PRIMARY KEY,
-  area_name VARCHAR(255) NOT NULL,
+  area_name VARCHAR(255) UNIQUE NOT NULL,
   active BOOLEAN NOT NULL
 );
 
