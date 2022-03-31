@@ -13,6 +13,7 @@ const studentGroups = require('./routes/studentGroups');
 const generalUsers = require('./routes/generalUsers');
 const tlpUsers = require('./routes/tlpUsers');
 const { authRouter } = require('./routes/auth'); // add verifyToken
+const emailRouter = require('./routes/nodeMailer');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/student-groups', studentGroups);
 app.use('/general-users', generalUsers);
 app.use('/tlp-users', tlpUsers);
 app.use('/auth', authRouter);
+app.use('/send-email', emailRouter);
 
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
