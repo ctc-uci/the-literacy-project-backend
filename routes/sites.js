@@ -133,6 +133,7 @@ router.put('/:siteId', async (req, res) => {
     isZipCode(addressZip, 'Zip code is invalid');
     isNumeric(areaId, 'Area Id must be a Number');
     isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
+    isBoolean(active, 'Active is not a boolean');
     if (secondContactId) {
       isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
     }
