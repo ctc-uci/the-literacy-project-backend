@@ -127,18 +127,20 @@ router.put('/:siteId', async (req, res) => {
       areaId,
       primaryContactId,
       secondContactId,
+      active,
       notes,
     } = req.body;
     isZipCode(addressZip, 'Zip code is invalid');
     isNumeric(areaId, 'Area Id must be a Number');
     isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
+    isBoolean(active, 'Active is not a boolean');
     if (secondContactId) {
       isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
     }
     await db.query(
       `UPDATE site
       SET site_name = $(siteName), address_street = $(addressStreet), address_city = $(addressCity),
-          address_zip = $(addressZip), area_id = $(areaId), primary_contact_id = $(primaryContactId)
+          address_zip = $(addressZip), area_id = $(areaId), primary_contact_id = $(primaryContactId), active = $(active)
           ${secondContactId ? ', second_contact_id = $(secondContactId)' : ''}
           ${notes ? ', notes = $(notes)' : ''}
       WHERE site_id = $(siteId)
@@ -152,6 +154,7 @@ router.put('/:siteId', async (req, res) => {
         primaryContactId,
         secondContactId,
         notes,
+        active,
         siteId,
       },
     );
