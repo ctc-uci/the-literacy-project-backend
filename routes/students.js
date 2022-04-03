@@ -47,6 +47,27 @@ router.get('/teacher/:teacherId', async (req, res) => {
   }
 });
 
+// get all students groups and students for a given site
+router.get('/site/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    isNumeric(siteId, 'Site Id must be a Number');
+    const students = await pool.query(
+      `SELECT student_group.*, relation.students
+      FROM student_group
+          LEFT JOIN (SELECT s.student_group_id, array_agg(to_json(s.*) ORDER BY s.student_id ASC) AS students
+              FROM student AS s
+              GROUP BY s.student_group_id) AS relation
+              ON relation.student_group_id = student_group.group_id
+      WHERE student_group.site_id = $1;`,
+      [siteId],
+    );
+    res.status(200).json(keysToCamel(students.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // create a student
 router.post('/', async (req, res) => {
   try {
