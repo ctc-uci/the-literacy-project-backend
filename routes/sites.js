@@ -146,7 +146,7 @@ router.put('/:siteId', async (req, res) => {
     if (secondContactId) {
       isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
     }
-    const queryComponents = Object.keys({
+    let queryComponents = {
       siteName,
       addressStreet,
       addressCity,
@@ -156,8 +156,9 @@ router.put('/:siteId', async (req, res) => {
       secondContactId,
       active,
       notes,
-    })
-      .filter((component) => component !== null && component !== '')
+    };
+    queryComponents = Object.keys(queryComponents)
+      .filter((component) => queryComponents[component])
       .map((component) =>
         component ? `${camelToSnake(component)} = '${req.body[component]}'` : '',
       )
