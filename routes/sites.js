@@ -157,12 +157,14 @@ router.put('/:siteId', async (req, res) => {
       active,
       notes,
     };
+    console.log(req.body);
     queryComponents = Object.keys(queryComponents)
-      .filter((component) => queryComponents[component])
+      .filter((component) => component === 'active' || queryComponents[component])
       .map((component) =>
         component ? `${camelToSnake(component)} = '${req.body[component]}'` : '',
       )
       .join(', ');
+    console.log(queryComponents);
     await db.query(
       `UPDATE site
       SET ${queryComponents}
