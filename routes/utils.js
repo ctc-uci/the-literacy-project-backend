@@ -71,6 +71,14 @@ const keysToCamel = (data) => {
   return data;
 };
 
+const camelToSnake = (key) => {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .split(' ')
+    .join('_')
+    .toLowerCase();
+};
+
 const addContact = async (contactInfo) => {
   const id = await pool.query(
     `INSERT INTO general_user
@@ -95,6 +103,7 @@ module.exports = {
   isAlphaNumeric,
   isPhoneNumber,
   keysToCamel,
+  camelToSnake,
   addContact,
   isNanoId,
 };

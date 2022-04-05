@@ -4,6 +4,7 @@ const {
   isNumeric,
   isZipCode,
   keysToCamel,
+  camelToSnake,
   isPhoneNumber,
   addContact,
   isBoolean,
@@ -130,31 +131,44 @@ router.put('/:siteId', async (req, res) => {
       active,
       notes,
     } = req.body;
-    isZipCode(addressZip, 'Zip code is invalid');
-    isNumeric(areaId, 'Area Id must be a Number');
-    isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
-    isBoolean(active, 'Active is not a boolean');
+    if (addressZip) {
+      isZipCode(addressZip, 'Zip code is invalid');
+    }
+    if (areaId) {
+      isNumeric(areaId, 'Area Id must be a Number');
+    }
+    if (primaryContactId) {
+      isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
+    }
+    if (active) {
+      isBoolean(active, 'Active is not a boolean');
+    }
     if (secondContactId) {
       isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
     }
+    let queryComponents = {
+      siteName,
+      addressStreet,
+      addressCity,
+      addressZip,
+      areaId,
+      primaryContactId,
+      secondContactId,
+      active,
+      notes,
+    };
+    queryComponents = Object.keys(queryComponents)
+      .filter((component) => queryComponents[component])
+      .map((component) =>
+        component ? `${camelToSnake(component)} = '${req.body[component]}'` : '',
+      )
+      .join(', ');
     await db.query(
       `UPDATE site
-      SET site_name = $(siteName), address_street = $(addressStreet), address_city = $(addressCity),
-          address_zip = $(addressZip), area_id = $(areaId), primary_contact_id = $(primaryContactId), active = $(active)
-          ${secondContactId ? ', second_contact_id = $(secondContactId)' : ''}
-          ${notes ? ', notes = $(notes)' : ''}
+      SET ${queryComponents}
       WHERE site_id = $(siteId)
       RETURNING *;`,
       {
-        siteName,
-        addressStreet,
-        addressCity,
-        addressZip,
-        areaId,
-        primaryContactId,
-        secondContactId,
-        notes,
-        active,
         siteId,
       },
     );
