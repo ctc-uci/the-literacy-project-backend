@@ -17,12 +17,12 @@ router.get('/area-management', async (req, res) => {
       SELECT area.*, site.num_sites, site.site_info, mt_info.num_mts, student_info.num_students
       FROM area
         LEFT JOIN
-          (SELECT site.area_id, COUNT(site.site_id) as num_sites, array_agg(json_build_object('site_id', site.site_id, 'site_name', site.site_name)) as site_info
+          (SELECT site.area_id, COUNT(site.site_id)::int as num_sites, array_agg(json_build_object('site_id', site.site_id, 'site_name', site.site_name)) as site_info
           FROM site
           GROUP BY site.area_id)
         AS site ON site.area_id = area.area_id
         LEFT JOIN
-          (SELECT site.area_id, COUNT(*) as num_mts
+          (SELECT site.area_id, COUNT(*)::int as num_mts
           FROM master_teacher_site_relation as mt
             INNER JOIN
               (SELECT site.site_id, site.area_id FROM site)
@@ -30,7 +30,7 @@ router.get('/area-management', async (req, res) => {
           GROUP BY site.area_id)
         AS mt_info on mt_info.area_id = area.area_id
         LEFT JOIN
-          (SELECT site.area_id, COUNT(*) as num_students
+          (SELECT site.area_id, COUNT(*)::int as num_students
           FROM student
             INNER JOIN
               (SELECT sg.group_id, sg.site_id
