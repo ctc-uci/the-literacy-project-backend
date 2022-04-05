@@ -47,7 +47,7 @@ router.get('/teacher/:teacherId', async (req, res) => {
   }
 });
 
-// get all students groups and students for a given site
+// get all students for a given site
 router.get('/site/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;
@@ -70,7 +70,7 @@ router.get('/site/:siteId', async (req, res) => {
   }
 });
 
-// get all students groups and students for a given area
+// get all students for a given area
 router.get('/area/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;
