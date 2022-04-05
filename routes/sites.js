@@ -158,7 +158,7 @@ router.put('/:siteId', async (req, res) => {
       notes,
     };
     queryComponents = Object.keys(queryComponents)
-      .filter((component) => queryComponents[component])
+      .filter((component) => component === 'active' || queryComponents[component])
       .map((component) =>
         component ? `${camelToSnake(component)} = '${req.body[component]}'` : '',
       )
