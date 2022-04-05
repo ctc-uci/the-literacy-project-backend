@@ -53,13 +53,15 @@ router.get('/site/:siteId', async (req, res) => {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
     const students = await pool.query(
-      `SELECT student_group.*, relation.students
-      FROM student_group
-          LEFT JOIN (SELECT s.student_group_id, array_agg(to_json(s.*) ORDER BY s.student_id ASC) AS students
-              FROM student AS s
-              GROUP BY s.student_group_id) AS relation
-              ON relation.student_group_id = student_group.group_id
-      WHERE student_group.site_id = $1;`,
+      `SELECT student.*
+      FROM student
+        INNER JOIN (SELECT s.group_id, s.site_id
+              FROM student_group AS s) AS student_group
+              ON student_group.group_id = student.student_group_id
+        INNER JOIN (SELECT site.site_id, site.area_id
+               FROM site) AS site
+               ON site.site_id = student_group.site_id
+      WHERE site.site_id = $1;`,
       [siteId],
     );
     res.status(200).json(keysToCamel(students.rows));
