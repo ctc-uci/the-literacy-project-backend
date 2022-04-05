@@ -54,7 +54,7 @@ CREATE TABLE area (
 DROP TABLE site CASCADE;
 CREATE TABLE site (
   site_id SERIAL PRIMARY KEY,
-  site_name VARCHAR(255) NOT NULL,
+  site_name VARCHAR(255) UNIQUE NOT NULL,
   address_street VARCHAR(255) NOT NULL,
   address_city VARCHAR(255) NOT NULL,
   address_zip VARCHAR(5) NOT NULL,
