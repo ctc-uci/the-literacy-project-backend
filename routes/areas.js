@@ -22,7 +22,7 @@ router.get('/area-management', async (req, res) => {
           GROUP BY site.area_id)
         AS site ON site.area_id = area.area_id
         LEFT JOIN
-          (SELECT site.area_id, COUNT(*)::int as num_mts
+          (SELECT site.area_id, COUNT(DISTINCT mt.user_id)::int as num_mts
           FROM master_teacher_site_relation as mt
             INNER JOIN
               (SELECT site.site_id, site.area_id FROM site)
