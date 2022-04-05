@@ -70,7 +70,7 @@ CREATE TABLE student_group (
   group_id SERIAL PRIMARY KEY,
   year INT NOT NULL,
   cycle cycles NOT NULL,
-  master_teacher_id INT REFERENCES master_teacher(user_id) ON DELETE NO ACTION NOT NULL,
+  master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE NO ACTION NOT NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
   meeting_day weekday NOT NULL,
   meeting_time TIME NOT NULL
