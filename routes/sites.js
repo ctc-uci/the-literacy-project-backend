@@ -4,7 +4,6 @@ const {
   isNumeric,
   isZipCode,
   keysToCamel,
-  camelToSnake,
   isPhoneNumber,
   addContact,
   isBoolean,
@@ -146,30 +145,31 @@ router.put('/:siteId', async (req, res) => {
     if (secondContactId) {
       isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
     }
-    let queryComponents = {
-      siteName,
-      addressStreet,
-      addressCity,
-      addressZip,
-      areaId,
-      primaryContactId,
-      secondContactId,
-      active,
-      notes,
-    };
-    queryComponents = Object.keys(queryComponents)
-      .filter((component) => queryComponents[component])
-      .map((component) =>
-        component ? `${camelToSnake(component)} = '${req.body[component]}'` : '',
-      )
-      .join(', ');
     await db.query(
       `UPDATE site
-      SET ${queryComponents}
+      SET site_id = $(siteId)
+      ${siteName ? ', site_name = $(siteName)' : ''}
+      ${addressStreet ? ', address_street = $(addressStreet)' : ''}
+      ${addressCity ? ', address_city = $(addressCity)' : ''}
+      ${addressZip ? ', address_zip = $(addressZip)' : ''}
+      ${areaId ? ', area_id = $(areaId)' : ''}
+      ${primaryContactId ? ', primary_contact_id = $(primaryContactId)' : ''}
+      ${secondContactId ? ', second_contact_id = $(secondContactId)' : ''}
+      ${active != null ? `, active = '$(active)'` : ''}
+      ${notes ? ', notes = $(notes)' : ''}
       WHERE site_id = $(siteId)
       RETURNING *;`,
       {
         siteId,
+        siteName,
+        addressStreet,
+        addressCity,
+        addressZip,
+        areaId,
+        primaryContactId,
+        secondContactId,
+        active,
+        notes,
       },
     );
     const site = await pool.query(getSites(false), [siteId]);
