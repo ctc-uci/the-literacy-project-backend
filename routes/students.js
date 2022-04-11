@@ -4,13 +4,26 @@ const { isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();
 
+/*
+convert ethnicities array into javascript array
+add score endpoint
+*/
+
+const studentsQuery = (conditions = '') =>
+  `SELECT student.*, site.site_name
+  FROM student
+    LEFT JOIN student_group on student_group.group_id = student.student_group_id
+    LEFT JOIN site on site.site_id = student_group.site_id
+  ${conditions};`;
+
 // get a student by id
 router.get('/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     isNumeric(studentId, 'Student Id must be a Number');
-    const area = await pool.query(`SELECT * FROM student WHERE student_id = $1;`, [studentId]);
-    res.status(200).send(keysToCamel(area.rows[0]));
+    const conditions = 'WHERE student.student_id = $1';
+    const student = await pool.query(studentsQuery(conditions), [studentId]);
+    res.status(200).send(keysToCamel(student.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -19,7 +32,7 @@ router.get('/:studentId', async (req, res) => {
 // get all students
 router.get('/', async (req, res) => {
   try {
-    const allStudents = await pool.query('SELECT * FROM student');
+    const allStudents = await pool.query(studentsQuery());
     res.status(200).json(keysToCamel(allStudents.rows));
   } catch (err) {
     res.status(400).send(err.message);
@@ -96,24 +109,23 @@ router.get('/area/:areaId', async (req, res) => {
 // create a student
 router.post('/', async (req, res) => {
   try {
-    const { firstName, lastName, grade, homeTeacher, studentGroupId, ethnicity } = req.body;
+    const { firstName, lastName, grade, gender, homeTeacher, studentGroupId, ethnicity } = req.body;
     isNumeric(grade, 'Grade must be a Number');
     if (studentGroupId) {
       isNumeric(studentGroupId, 'Student Group Id must be a Number');
     }
-    const eth = ethnicity || [];
     const newStudent = await db.query(
       `INSERT INTO student (
-        first_name, last_name, grade,
+        first_name, last_name, gender, grade,
         ${homeTeacher ? 'home_teacher, ' : ''}
         ${studentGroupId ? 'student_group_id, ' : ''}
         ethnicity)
-      VALUES ($(firstName), $(lastName), $(grade),
+      VALUES ($(firstName), $(lastName), $(gender), $(grade),
         ${homeTeacher ? '$(homeTeacher), ' : ''}
         ${studentGroupId ? '$(studentGroupId), ' : ''}
-        $(eth)::ethnicities[])
+        $(ethnicity)::ethnicities[])
       RETURNING *;`,
-      { firstName, lastName, grade, homeTeacher, studentGroupId, eth },
+      { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity },
     );
     res.status(200).send(keysToCamel(newStudent[0]));
   } catch (err) {
@@ -126,24 +138,24 @@ router.put('/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     isNumeric(studentId, 'Student Id must be a Number');
-    const { firstName, lastName, grade, homeTeacher, studentGroupId, ethnicity } = req.body;
+    const { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity } = req.body;
     isNumeric(grade, 'Grade must be a Number');
     if (studentGroupId) {
       isNumeric(studentGroupId, 'Student Group Id must be a Number');
     }
-    const eth = ethnicity || [];
     const updatedStudent = await db.query(
       `UPDATE student
       SET
         first_name = $(firstName),
         last_name = $(lastName),
+        gender = $(gender),
         grade = $(grade),
         home_teacher = $(homeTeacher),
         ${studentGroupId ? 'student_group_id = $(studentGroupId), ' : ''}
-        ethnicity = $(eth)::ethnicities[]
+        ethnicity = $(ethnicity)::ethnicities[]
       WHERE student_id = $(studentId)
       RETURNING *;`,
-      { firstName, lastName, grade, homeTeacher, studentGroupId, eth, studentId },
+      { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity, studentId },
     );
     res.status(200).send(keysToCamel(updatedStudent[0]));
   } catch (err) {

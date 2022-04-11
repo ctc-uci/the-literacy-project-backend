@@ -54,16 +54,17 @@ router.get('/site/:siteId', async (req, res) => {
 // add a student group
 router.post('/', async (req, res) => {
   try {
-    const { year, cycle, masterTeacherId, siteId, meetingDay, meetingTime } = req.body;
+    const { name, year, cycle, masterTeacherId, siteId, meetingDay, meetingTime } = req.body;
     isNumeric(year, 'Year must be a Number');
     isNumeric(masterTeacherId, 'Master teacher Id must be a Number');
     isNumeric(siteId, 'Site Id must be a Number');
-
     const group = await pool.query(
-      `INSERT INTO student_group (year, cycle, master_teacher_id, site_id, meeting_day, meeting_time)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING *;`,
-      [year, cycle, masterTeacherId, siteId, meetingDay, meetingTime],
+      `INSERT INTO student_group (
+        name, year, cycle, master_teacher_id,
+        site_id, meeting_day, meeting_time)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *;`,
+      [name, year, cycle, masterTeacherId, siteId, meetingDay, meetingTime],
     );
 
     const addedGroup = await pool.query(getStudentGroups(false), [group.rows[0].group_id]);
@@ -78,15 +79,18 @@ router.put('/:studentGroupId', async (req, res) => {
   try {
     const { studentGroupId } = req.params;
     isNumeric(studentGroupId, 'Student Group Id must be a Number');
-    const { year, cycle, masterTeacherId, siteId, meetingDay, meetingTime } = req.body;
+    const { name, year, cycle, masterTeacherId, siteId, meetingDay, meetingTime } = req.body;
     isNumeric(year, 'Year must be a Number');
     isNumeric(masterTeacherId, 'Master teacher Id must be a Number');
     isNumeric(siteId, 'Site Id must be a Number');
     await pool.query(
       `UPDATE student_group
-        SET year = $1, cycle = $2, master_teacher_id = $3, site_id = $4, meeting_day = $5, meeting_time = $6
-        WHERE group_id = $7`,
-      [year, cycle, masterTeacherId, siteId, meetingDay, meetingTime, studentGroupId],
+      SET
+        name = $1, year = $2, cycle = $3,
+        master_teacher_id = $4, site_id = $5,
+        meeting_day = $6, meeting_time = $7
+      WHERE group_id = $8;`,
+      [name, year, cycle, masterTeacherId, siteId, meetingDay, meetingTime, studentGroupId],
     );
     const updatedGroup = await pool.query(getStudentGroups(false), [studentGroupId]);
     res.status(200).send(keysToCamel(updatedGroup.rows[0]));

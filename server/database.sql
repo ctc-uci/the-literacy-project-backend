@@ -1,11 +1,13 @@
 DROP TYPE pos CASCADE;
 DROP TYPE season CASCADE;
 DROP TYPE user_status CASCADE;
+DROP TYPE genders CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
 CREATE TYPE cycles AS ENUM('1', '2', '3', '4');
 CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
-CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'latinx', 'american indian or alaska native');
+CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'latinx', 'american indian or alaska native', 'non-specified');
 CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
+CREATE TYPE genders AS ENUM('male', 'female', 'non-specified');
 
 DROP TABLE general_user CASCADE;
 CREATE TABLE general_user (
@@ -68,6 +70,7 @@ CREATE TABLE site (
 DROP TABLE student_group CASCADE;
 CREATE TABLE student_group (
   group_id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
   year INT NOT NULL,
   cycle cycles NOT NULL,
   master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE NO ACTION NOT NULL,
@@ -81,10 +84,11 @@ CREATE TABLE student (
   student_id SERIAL PRIMARY KEY,
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
+  gender genders NOT NULL;
   grade INT NOT NULL,
   home_teacher VARCHAR(255),
   student_group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION,
-  ethnicity ethnicities[],
+  ethnicity ethnicities[] NOT NULL,
   pretest_r INT[],
   posttest_r INT[],
   pretest_a INT[],
