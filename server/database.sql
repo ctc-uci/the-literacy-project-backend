@@ -1,6 +1,8 @@
 DROP TYPE pos CASCADE;
-DROP TYPE season CASCADE;
+DROP TYPE cycles CASCADE;
 DROP TYPE user_status CASCADE;
+DROP TYPE ethnicities;
+DROP TYPE weekday;
 DROP TYPE genders CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
 CREATE TYPE cycles AS ENUM('1', '2', '3', '4');
@@ -87,7 +89,7 @@ CREATE TABLE student (
   gender genders NOT NULL;
   grade INT NOT NULL,
   home_teacher VARCHAR(255),
-  student_group_id INT REFERENCES student_group(group_id) ON DELETE NO ACTION,
+  student_group_id INT REFERENCES student_group(group_id) ON DELETE SET NULL,
   ethnicity ethnicities[] NOT NULL,
   pretest_r INT[],
   posttest_r INT[],

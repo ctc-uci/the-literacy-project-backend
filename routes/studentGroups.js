@@ -82,8 +82,8 @@ router.post('/', async (req, res) => {
       RETURNING *;`,
       [name, year, cycle, masterTeacherId, siteId, meetingDay, meetingTime],
     );
-
-    const addedGroup = await pool.query(getStudentGroups(false), [group.rows[0].group_id]);
+    const conditions = 'WHERE student_group.group_id = $1';
+    const addedGroup = await pool.query(getStudentGroups(conditions), [group.rows[0].group_id]);
     res.status(200).send(keysToCamel(addedGroup.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -108,7 +108,8 @@ router.put('/:studentGroupId', async (req, res) => {
       WHERE group_id = $8;`,
       [name, year, cycle, masterTeacherId, siteId, meetingDay, meetingTime, studentGroupId],
     );
-    const updatedGroup = await pool.query(getStudentGroups(false), [studentGroupId]);
+    const conditions = 'WHERE student_group.group_id = $1';
+    const updatedGroup = await pool.query(getStudentGroups(conditions), [studentGroupId]);
     res.status(200).send(keysToCamel(updatedGroup.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
