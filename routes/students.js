@@ -39,22 +39,41 @@ router.get('/', async (req, res) => {
   }
 });
 
+// dont think we need this request anymore because have the same request
+// in the student groups route
 // get all students groups and students for a given teacher
-router.get('/teacher/:teacherId', async (req, res) => {
+// router.get('/teacher/:teacherId', async (req, res) => {
+//   try {
+//     const { teacherId } = req.params;
+//     isNumeric(teacherId, 'Teacher Id must be a Number');
+//     const studentGroup = await pool.query(
+//       `SELECT student_group.*, relation.students
+//       FROM student_group
+//           LEFT JOIN (SELECT s.student_group_id, array_agg(to_json(s.*) ORDER BY s.student_id ASC) AS students
+//               FROM student AS s
+//               GROUP BY s.student_group_id) AS relation
+//               ON relation.student_group_id = student_group.group_id
+//       WHERE student_group.master_teacher_id = $1;`,
+//       [teacherId],
+//     );
+//     res.status(200).json(keysToCamel(studentGroup.rows));
+//   } catch (err) {
+//     res.status(400).send(err.message);
+//   }
+// });
+
+// get all students for a given student group
+router.get('/student-group/:studentGroupId', async (req, res) => {
   try {
-    const { teacherId } = req.params;
-    isNumeric(teacherId, 'Teacher Id must be a Number');
-    const studentGroup = await pool.query(
-      `SELECT student_group.*, relation.students
-      FROM student_group
-          LEFT JOIN (SELECT s.student_group_id, array_agg(to_json(s.*) ORDER BY s.student_id ASC) AS students
-              FROM student AS s
-              GROUP BY s.student_group_id) AS relation
-              ON relation.student_group_id = student_group.group_id
-      WHERE student_group.master_teacher_id = $1;`,
-      [teacherId],
+    const { studentGroupId } = req.params;
+    isNumeric(studentGroupId, 'Student Group Id must be a Number');
+    const students = await pool.query(
+      `SELECT student.*
+      FROM student
+      WHERE student.student_group_id = $1;`,
+      [studentGroupId],
     );
-    res.status(200).json(keysToCamel(studentGroup.rows));
+    res.status(200).json(keysToCamel(students.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }

@@ -4,22 +4,27 @@ const { isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();
 
-const getStudentGroups = (allGroups) =>
+const getStudentGroups = (conditions = '') =>
   `SELECT student_group.*, relation.students
-    FROM student_group
-        LEFT JOIN (SELECT s.student_group_id, array_agg(s.student_id ORDER BY s.student_id ASC) AS students
-            FROM student AS s
-            GROUP BY s.student_group_id) AS relation
-        ON relation.student_group_id = student_group.group_id ${
-          allGroups ? '' : ' WHERE student_group.group_id = $1'
-        }`;
+  FROM student_group
+    LEFT JOIN (SELECT s.student_group_id,
+                      array_agg(json_build_object('student_id', s.student_id,
+                                                  'first_name', s.first_name,
+                                                  'last_name', s.last_name)
+                                ORDER BY s.first_name, s.last_name ASC)
+          AS students
+        FROM student AS s
+        GROUP BY s.student_group_id) AS relation
+    ON relation.student_group_id = student_group.group_id
+  ${conditions};`;
 
 // get a student group by id
 router.get('/:studentGroupId', async (req, res) => {
   try {
     const { studentGroupId } = req.params;
+    const conditions = 'WHERE student_group.group_id = $1';
     isNumeric(studentGroupId, 'Student Group Id must be a Number');
-    const studentGroup = await pool.query(getStudentGroups(false), [studentGroupId]);
+    const studentGroup = await pool.query(getStudentGroups(conditions), [studentGroupId]);
     res.status(200).send(keysToCamel(studentGroup.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -29,22 +34,33 @@ router.get('/:studentGroupId', async (req, res) => {
 // get all student groups
 router.get('/', async (req, res) => {
   try {
-    const studentGroup = await pool.query(getStudentGroups(true));
+    const studentGroup = await pool.query(getStudentGroups());
     res.status(200).send(keysToCamel(studentGroup.rows));
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
-// get all students groups for a given site
+// get all student groups for a given site
 router.get('/site/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
-    const studentGroup = await pool.query(
-      `${getStudentGroups(true)} WHERE student_group.site_id = $1`,
-      [siteId],
-    );
+    const conditions = 'WHERE student_group.site_id = $1';
+    const studentGroup = await pool.query(getStudentGroups(conditions), [siteId]);
+    res.status(200).json(keysToCamel(studentGroup.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// get all student groups for a given master teacher
+router.get('/master-teacher/:masterTeacherId', async (req, res) => {
+  try {
+    const { masterTeacherId } = req.params;
+    isNumeric(masterTeacherId, 'Master Teacher Id must be a Number');
+    const conditions = 'WHERE student_group.master_teacher_id = $1';
+    const studentGroup = await pool.query(getStudentGroups(conditions), [masterTeacherId]);
     res.status(200).json(keysToCamel(studentGroup.rows));
   } catch (err) {
     res.status(400).send(err.message);
