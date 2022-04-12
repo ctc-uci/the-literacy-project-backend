@@ -4,11 +4,6 @@ const { isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();
 
-/*
-convert ethnicities array into javascript array
-add score endpoint
-*/
-
 const studentsQuery = (conditions = '') =>
   `SELECT student.*, site.site_name
   FROM student
