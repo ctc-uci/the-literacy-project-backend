@@ -157,7 +157,7 @@ router.put('/:studentId', async (req, res) => {
     if (studentGroupId) {
       isNumeric(studentGroupId, 'Student Group Id must be a Number');
     }
-    const updatedStudent = await db.query(
+    await db.query(
       `UPDATE student
       SET
         first_name = $(firstName),
@@ -171,7 +171,9 @@ router.put('/:studentId', async (req, res) => {
       RETURNING *;`,
       { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity, studentId },
     );
-    res.status(200).send(keysToCamel(updatedStudent[0]));
+    const conditions = 'WHERE student.student_id = $1';
+    const updatedStudent = await pool.query(studentsQuery(conditions), [studentId]);
+    res.status(200).send(keysToCamel(updatedStudent.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
