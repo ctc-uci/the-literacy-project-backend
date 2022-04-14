@@ -128,7 +128,7 @@ router.post('/', async (req, res) => {
     if (studentGroupId) {
       isNumeric(studentGroupId, 'Student Group Id must be a Number');
     }
-    const newStudent = await db.query(
+    const student = await db.query(
       `INSERT INTO student (
         first_name, last_name, gender, grade,
         ${homeTeacher ? 'home_teacher, ' : ''}
@@ -141,7 +141,9 @@ router.post('/', async (req, res) => {
       RETURNING *;`,
       { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity },
     );
-    res.status(200).send(keysToCamel(newStudent[0]));
+    const conditions = 'WHERE student.student_id = $1';
+    const newStudent = await pool.query(studentsQuery(conditions), [student.rows[0].student_id]);
+    res.status(200).send(keysToCamel(newStudent.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
