@@ -18,6 +18,9 @@ router.get('/:studentId', async (req, res) => {
     isNumeric(studentId, 'Student Id must be a Number');
     const conditions = 'WHERE student.student_id = $1';
     const student = await pool.query(studentsQuery(conditions), [studentId]);
+    if (student.rows.length === 0) {
+      res.status(404).send(`Student with id=${studentId} not found`);
+    }
     res.status(200).send(keysToCamel(student.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
