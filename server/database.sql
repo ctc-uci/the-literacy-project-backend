@@ -94,5 +94,9 @@ CREATE TABLE student (
   pretest_r INT[],
   posttest_r INT[],
   pretest_a INT[],
-  posttest_a INT[]
+  posttest_a INT[],
+  pretest_r_notes VARCHAR(255)[],
+  posttest_r_notes VARCHAR(255)[],
+  pretest_a_notes VARCHAR(255)[],
+  posttest_a_notes VARCHAR(255)[]
 );
