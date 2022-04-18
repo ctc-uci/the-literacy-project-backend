@@ -5,6 +5,16 @@ const admin = require('../firebase');
 
 const router = Router();
 
+// This gets all invites from the invite table
+router.get('/invite', async (req, res) => {
+  try {
+    const invites = await pool.query('SELECT * FROM invites;');
+    res.status(200).json(keysToCamel(invites.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // get a TLP user (DB Id, position, active) by their firebase ID
 router.get('/:firebaseId', async (req, res) => {
   try {
