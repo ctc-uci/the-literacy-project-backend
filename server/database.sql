@@ -65,10 +65,18 @@ CREATE TABLE site (
   address_state states NOT NULL,
   address_zip VARCHAR(5) NOT NULL,
   area_id INT REFERENCES area(area_id) ON DELETE SET NULL NOT NULL,
-  primary_contact_id INT REFERENCES tlp_user(user_id) NOT NULL,
-  second_contact_id INT REFERENCES tlp_user(user_id),
   active BOOLEAN NOT NULL,
-  notes VARCHAR(255)
+  notes VARCHAR(255),
+  primary_contact_first_name VARCHAR(255) NOT NULL,
+  primary_contact_last_name VARCHAR(255) NOT NULL,
+  primary_contact_title VARCHAR(255),
+  primary_contact_email VARCHAR(255) NOT NULL,
+  primary_contact_phone_number VARCHAR(15) NOT NULL,
+  second_contact_first_name VARCHAR(255),
+  second_contact_last_name VARCHAR(255),
+  second_contact_title VARCHAR(255),
+  second_contact_email VARCHAR(255),
+  second_contact_phone_number VARCHAR(15)
 );
 
 DROP TABLE student_group CASCADE;
