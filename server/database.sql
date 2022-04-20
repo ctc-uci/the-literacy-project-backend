@@ -17,20 +17,14 @@ CREATE TYPE states AS ENUM('Alabama','Alaska', 'Arizona', 'Arkansas', 'Californi
 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia'
 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming');
 
-DROP TABLE general_user CASCADE;
-CREATE TABLE general_user (
+DROP TABLE tlp_user CASCADE;
+CREATE TABLE tlp_user (
   user_id SERIAL PRIMARY KEY,
+  firebase_id VARCHAR(128) UNIQUE NOT NULL,
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
   phone_number VARCHAR(15) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  title VARCHAR(255)
-);
-
-DROP TABLE tlp_user CASCADE;
-CREATE TABLE tlp_user (
-  user_id INT PRIMARY KEY REFERENCES general_user(user_id) ON DELETE CASCADE NOT NULL,
-  firebase_id VARCHAR(128) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
   position pos NOT NULL,
   active user_status NOT NULL
 );
@@ -84,7 +78,11 @@ CREATE TABLE student_group (
   year INT NOT NULL,
   cycle cycles NOT NULL,
   master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE SET NULL,
+<<<<<<< HEAD
   site_id INT REFERENCES site(site_id) ON DELETE CASCADE NOT NULL,
+=======
+  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
+>>>>>>> c26e803e0cf3414c8a95c7c7b7f50bc1ab52af85
   meeting_day weekday NOT NULL,
   meeting_time TIME NOT NULL
 );
@@ -102,5 +100,9 @@ CREATE TABLE student (
   pretest_r INT[],
   posttest_r INT[],
   pretest_a INT[],
-  posttest_a INT[]
+  posttest_a INT[],
+  pretest_r_notes VARCHAR(255)[],
+  posttest_r_notes VARCHAR(255)[],
+  pretest_a_notes VARCHAR(255)[],
+  posttest_a_notes VARCHAR(255)[]
 );
