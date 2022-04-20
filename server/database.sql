@@ -10,6 +10,12 @@ CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
 CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'latinx', 'american indian or alaska native', 'non-specified');
 CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 CREATE TYPE genders AS ENUM('male', 'female', 'non-specified');
+CREATE TYPE states AS ENUM('Alabama','Alaska', 'Arizona', 'Arkansas', 'California','Colorado', 'Connecticut', 'Delaware',
+'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine',
+'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada'. 'New Hampshire',
+'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania',
+'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia'
+'Washington', 'West Virginia', 'Wisconsin', 'Wyoming');
 
 DROP TABLE general_user CASCADE;
 CREATE TABLE general_user (
@@ -60,7 +66,9 @@ CREATE TABLE site (
   site_id SERIAL PRIMARY KEY,
   site_name VARCHAR(255) UNIQUE NOT NULL,
   address_street VARCHAR(255) NOT NULL,
+  address_apt VARCHAR(255),
   address_city VARCHAR(255) NOT NULL,
+  address_state states NOT NULL,
   address_zip VARCHAR(5) NOT NULL,
   area_id INT REFERENCES area(area_id) ON DELETE SET NULL NOT NULL,
   primary_contact_id INT REFERENCES general_user(user_id) NOT NULL,
@@ -75,8 +83,8 @@ CREATE TABLE student_group (
   name VARCHAR(255) NOT NULL,
   year INT NOT NULL,
   cycle cycles NOT NULL,
-  master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE NO ACTION NOT NULL,
-  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
+  master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE SET NULL,
+  site_id INT REFERENCES site(site_id) ON DELETE CASCADE NOT NULL,
   meeting_day weekday NOT NULL,
   meeting_time TIME NOT NULL
 );
