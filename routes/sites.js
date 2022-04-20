@@ -25,7 +25,6 @@ const noMT = () =>
 // get sites without master teacher
 router.get('/noMT', async (req, res) => {
   try {
-    console.log('hello');
     const s = await pool.query(noMT());
     res.status(200).send(keysToCamel(s.rows));
   } catch (err) {
