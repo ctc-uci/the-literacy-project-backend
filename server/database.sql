@@ -65,8 +65,8 @@ CREATE TABLE site (
   address_state states NOT NULL,
   address_zip VARCHAR(5) NOT NULL,
   area_id INT REFERENCES area(area_id) ON DELETE SET NULL NOT NULL,
-  primary_contact_id INT REFERENCES general_user(user_id) NOT NULL,
-  second_contact_id INT REFERENCES general_user(user_id),
+  primary_contact_id INT REFERENCES tlp_user(user_id) NOT NULL,
+  second_contact_id INT REFERENCES tlp_user(user_id),
   active BOOLEAN NOT NULL,
   notes VARCHAR(255)
 );
@@ -78,11 +78,7 @@ CREATE TABLE student_group (
   year INT NOT NULL,
   cycle cycles NOT NULL,
   master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE SET NULL,
-<<<<<<< HEAD
   site_id INT REFERENCES site(site_id) ON DELETE CASCADE NOT NULL,
-=======
-  site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
->>>>>>> c26e803e0cf3414c8a95c7c7b7f50bc1ab52af85
   meeting_day weekday NOT NULL,
   meeting_time TIME NOT NULL
 );
