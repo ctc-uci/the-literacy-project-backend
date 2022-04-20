@@ -11,19 +11,15 @@ const {
 
 const router = Router();
 
+// Not sure what data yall want to display for sites now since general user has been removed.
+// Kept it simple and returned everything
 const getSites = (allSites) =>
-  `SELECT site.*, to_json(contact1) as "primaryContactInfo", to_json(contact2) as "secondContactInfo"
-  FROM site
-    INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
-    LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
+  `SELECT * FROM site
   ${allSites ? '' : 'WHERE site_id = $1'}`;
 
 const noMT = () =>
-  `SELECT site.*, to_json(contact1) as "primaryContactInfo", to_json(contact2) as "secondContactInfo"
-  FROM site
-    INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
-    LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
-    WHERE site_id not in
+  `SELECT * FROM site
+    WHERE site_id NOT IN
     (SELECT site_id FROM master_teacher_site_relation)`;
 
 // get sites without master teacher
