@@ -59,6 +59,8 @@ router.post('/', async (req, res) => {
       siteName,
       addressStreet,
       addressCity,
+      addressApt,
+      addressState,
       addressZip,
       areaId,
       primaryContactInfo,
@@ -82,13 +84,13 @@ router.post('/', async (req, res) => {
 
     const newSite = await db.query(
       `INSERT INTO site (
-        site_name, address_street, address_city,
+        site_name, address_street, address_apt, address_city, address_state,
         address_zip, area_id, primary_contact_id
         ${secondContactId ? ', second_contact_id' : ''}
         , active
         ${notes ? ', notes' : ''})
       VALUES (
-        $(siteName), $(addressStreet), $(addressCity),
+        $(siteName), $(addressStreet), $(addressApt), $(addressCity), $(addressState)
         $(addressZip), $(areaId), $(primaryContactId)
         ${secondContactId ? ', $(secondContactId)' : ''}
         , $(active)
@@ -97,7 +99,9 @@ router.post('/', async (req, res) => {
       {
         siteName,
         addressStreet,
+        addressApt,
         addressCity,
+        addressState,
         addressZip,
         areaId,
         primaryContactId,
@@ -122,7 +126,9 @@ router.put('/:siteId', async (req, res) => {
     const {
       siteName,
       addressStreet,
+      addressApt,
       addressCity,
+      addressState,
       addressZip,
       areaId,
       primaryContactId,
@@ -150,7 +156,9 @@ router.put('/:siteId', async (req, res) => {
       SET site_id = $(siteId)
       ${siteName ? ', site_name = $(siteName)' : ''}
       ${addressStreet ? ', address_street = $(addressStreet)' : ''}
+      ${addressApt ? ', address_apt = $(addressApt)' : ''}
       ${addressCity ? ', address_city = $(addressCity)' : ''}
+      ${addressState ? ', address_state = $(addressState)' : ''}
       ${addressZip ? ', address_zip = $(addressZip)' : ''}
       ${areaId ? ', area_id = $(areaId)' : ''}
       ${primaryContactId ? ', primary_contact_id = $(primaryContactId)' : ''}
@@ -163,7 +171,9 @@ router.put('/:siteId', async (req, res) => {
         siteId,
         siteName,
         addressStreet,
+        addressApt,
         addressCity,
+        addressState,
         addressZip,
         areaId,
         primaryContactId,
