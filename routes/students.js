@@ -4,16 +4,13 @@ const { isNumeric, keysToCamel } = require('./utils');
 
 const router = Router();
 
-/*
-convert ethnicities array into javascript array
-add score endpoint
-*/
-
 const studentsQuery = (conditions = '') =>
-  `SELECT student.*, site.site_name
+  `SELECT student.*, site.site_id, site.site_name, area.area_name,
+    student_group.name AS student_group_name, student_group.year, student_group.cycle
   FROM student
     LEFT JOIN student_group on student_group.group_id = student.student_group_id
     LEFT JOIN site on site.site_id = student_group.site_id
+    LEFT JOIN area on area.area_id = site.area_id
   ${conditions};`;
 
 // get a student by id
@@ -23,6 +20,9 @@ router.get('/:studentId', async (req, res) => {
     isNumeric(studentId, 'Student Id must be a Number');
     const conditions = 'WHERE student.student_id = $1';
     const student = await pool.query(studentsQuery(conditions), [studentId]);
+    if (student.rows.length === 0) {
+      res.status(404).send(`Student with id=${studentId} not found`);
+    }
     res.status(200).send(keysToCamel(student.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -38,29 +38,6 @@ router.get('/', async (req, res) => {
     res.status(400).send(err.message);
   }
 });
-
-// dont think we need this request anymore because have the same request
-// in the student groups route
-// get all students groups and students for a given teacher
-// router.get('/teacher/:teacherId', async (req, res) => {
-//   try {
-//     const { teacherId } = req.params;
-//     isNumeric(teacherId, 'Teacher Id must be a Number');
-//     const studentGroup = await pool.query(
-//       `SELECT student_group.*, relation.students
-//       FROM student_group
-//           LEFT JOIN (SELECT s.student_group_id, array_agg(to_json(s.*) ORDER BY s.student_id ASC) AS students
-//               FROM student AS s
-//               GROUP BY s.student_group_id) AS relation
-//               ON relation.student_group_id = student_group.group_id
-//       WHERE student_group.master_teacher_id = $1;`,
-//       [teacherId],
-//     );
-//     res.status(200).json(keysToCamel(studentGroup.rows));
-//   } catch (err) {
-//     res.status(400).send(err.message);
-//   }
-// });
 
 // get all students for a given student group
 router.get('/student-group/:studentGroupId', async (req, res) => {
@@ -156,7 +133,7 @@ router.post('/', async (req, res) => {
     if (studentGroupId) {
       isNumeric(studentGroupId, 'Student Group Id must be a Number');
     }
-    const newStudent = await db.query(
+    const student = await db.query(
       `INSERT INTO student (
         first_name, last_name, gender, grade,
         ${homeTeacher ? 'home_teacher, ' : ''}
@@ -169,7 +146,9 @@ router.post('/', async (req, res) => {
       RETURNING *;`,
       { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity },
     );
-    res.status(200).send(keysToCamel(newStudent[0]));
+    const conditions = 'WHERE student.student_id = $1';
+    const newStudent = await pool.query(studentsQuery(conditions), [student.rows[0].student_id]);
+    res.status(200).send(keysToCamel(newStudent.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -185,7 +164,7 @@ router.put('/:studentId', async (req, res) => {
     if (studentGroupId) {
       isNumeric(studentGroupId, 'Student Group Id must be a Number');
     }
-    const updatedStudent = await db.query(
+    await db.query(
       `UPDATE student
       SET
         first_name = $(firstName),
@@ -199,7 +178,9 @@ router.put('/:studentId', async (req, res) => {
       RETURNING *;`,
       { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity, studentId },
     );
-    res.status(200).send(keysToCamel(updatedStudent[0]));
+    const conditions = 'WHERE student.student_id = $1';
+    const updatedStudent = await pool.query(studentsQuery(conditions), [studentId]);
+    res.status(200).send(keysToCamel(updatedStudent.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -210,17 +191,40 @@ router.put('/update-scores/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
     isNumeric(studentId, 'Student Id must be a Number');
-    const { pretestR, posttestR, pretestA, posttestA } = req.body;
+    const {
+      pretestR,
+      pretestRNotes,
+      posttestR,
+      posttestRNotes,
+      pretestA,
+      pretestANotes,
+      posttestA,
+      posttestANotes,
+    } = req.body;
     const student = await db.query(
       `UPDATE student
       SET student_id = $(studentId)
           ${pretestR ? ', pretest_r = $(pretestR)' : ''}
+          ${pretestRNotes ? ', pretest_r_notes = $(pretestRNotes)' : ''}
           ${posttestR ? ', posttest_r = $(posttestR)' : ''}
+          ${posttestRNotes ? ', posttest_r_notes = $(posttestRNotes)' : ''}
           ${pretestA ? ', pretest_a = $(pretestA)' : ''}
+          ${pretestANotes ? ', pretest_a_notes = $(pretestANotes)' : ''}
           ${posttestA ? ', posttest_a = $(posttestA)' : ''}
+          ${posttestANotes ? ', posttest_a_notes = $(posttestANotes)' : ''}
       WHERE student_id = $(studentId)
       RETURNING *;`,
-      { pretestR, posttestR, pretestA, posttestA, studentId },
+      {
+        studentId,
+        pretestR,
+        pretestRNotes,
+        posttestR,
+        posttestRNotes,
+        pretestA,
+        pretestANotes,
+        posttestA,
+        posttestANotes,
+      },
     );
     res.status(200).send(keysToCamel(student[0]));
   } catch (err) {
