@@ -10,7 +10,11 @@ const getStudentGroups = (conditions = '') =>
     LEFT JOIN (SELECT s.student_group_id,
                       array_agg(json_build_object('student_id', s.student_id,
                                                   'first_name', s.first_name,
-                                                  'last_name', s.last_name)
+                                                  'last_name', s.last_name,
+                                                  'pretest_r', s.pretest_r,
+                                                  'posttest_r', s.posttest_r,
+                                                  'pretest_a', s.pretest_a,
+                                                  'posttest_a', s.posttest_a)
                                 ORDER BY s.first_name, s.last_name ASC)
           AS students
         FROM student AS s
