@@ -29,13 +29,13 @@ router.get('/', async (req, res) => {
 // add a general user
 router.post('/', async (req, res) => {
   try {
-    const { firstName, lastName, phoneNumber, email, title } = req.body;
+    const { firstName, lastName, phoneNumber, email } = req.body;
     isNumeric(phoneNumber, 'Invalid Phone Number');
     const newUser = await pool.query(
-      `INSERT INTO general_user (first_name, last_name, phone_number, email, title)
-      VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO general_user (first_name, last_name, phone_number, email)
+      VALUES ($1, $2, $3, $4)
       RETURNING *;`,
-      [firstName, lastName, phoneNumber, email, title],
+      [firstName, lastName, phoneNumber, email],
     );
     res.status(200).send(keysToCamel(newUser.rows[0]));
   } catch (err) {
@@ -48,15 +48,15 @@ router.put('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     isNumeric(userId, 'User Id must be a Number');
-    const { firstName, lastName, phoneNumber, email, title } = req.body;
+    const { firstName, lastName, phoneNumber, email } = req.body;
     isNumeric(phoneNumber, 'Invalid Phone Number');
     const updatedUser = await pool.query(
       `UPDATE general_user
       SET first_name = $1, last_name = $2,
-          phone_number = $3, email = $4, title = $5
-      WHERE user_id = $6
+          phone_number = $3, email = $4
+      WHERE user_id = $5
       RETURNING *;`,
-      [firstName, lastName, phoneNumber, email, title, userId],
+      [firstName, lastName, phoneNumber, email, userId],
     );
     res.status(200).send(keysToCamel(updatedUser.rows[0]));
   } catch (err) {
