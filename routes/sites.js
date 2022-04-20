@@ -18,6 +18,25 @@ const getSites = (allSites) =>
     LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
   ${allSites ? '' : 'WHERE site_id = $1'}`;
 
+const noMT = () =>
+  `SELECT site.*, to_json(contact1) as "primaryContactInfo", to_json(contact2) as "secondContactInfo"
+  FROM site
+    INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
+    LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
+    WHERE site_id not in
+    (SELECT site_id FROM master_teacher_site_relation)`;
+
+// get sites without master teacher
+router.get('/noMT', async (req, res) => {
+  try {
+    console.log('hello');
+    const s = await pool.query(noMT());
+    res.status(200).send(keysToCamel(s.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // get a site by id
 router.get('/:siteId', async (req, res) => {
   try {
