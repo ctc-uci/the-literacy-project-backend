@@ -11,20 +11,14 @@ CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'latinx', 'american i
 CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 CREATE TYPE genders AS ENUM('male', 'female', 'non-specified');
 
-DROP TABLE general_user CASCADE;
-CREATE TABLE general_user (
+DROP TABLE tlp_user CASCADE;
+CREATE TABLE tlp_user (
   user_id SERIAL PRIMARY KEY,
+  firebase_id VARCHAR(128) UNIQUE NOT NULL,
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
   phone_number VARCHAR(15) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  title VARCHAR(255)
-);
-
-DROP TABLE tlp_user CASCADE;
-CREATE TABLE tlp_user (
-  user_id INT PRIMARY KEY REFERENCES general_user(user_id) ON DELETE CASCADE NOT NULL,
-  firebase_id VARCHAR(128) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
   position pos NOT NULL,
   active user_status NOT NULL
 );
@@ -75,7 +69,7 @@ CREATE TABLE student_group (
   name VARCHAR(255) NOT NULL,
   year INT NOT NULL,
   cycle cycles NOT NULL,
-  master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE NO ACTION NOT NULL,
+  master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE SET NULL,
   site_id INT REFERENCES site(site_id) ON DELETE NO ACTION NOT NULL,
   meeting_day weekday NOT NULL,
   meeting_time TIME NOT NULL

@@ -6,15 +6,12 @@ const firebaseAdmin = require('../firebase');
 const router = Router();
 
 const getTeachers = (allTeachers) =>
-  `SELECT tlp_user.*, gen.first_name, gen.last_name, gen.phone_number, gen.email, relation.sites
+  `SELECT tlp_user.*, relation.sites
   FROM tlp_user
-    INNER JOIN
-      (SELECT * FROM general_user ${allTeachers ? '' : 'WHERE general_user.user_id = $1'})
-      AS gen ON gen.user_id = tlp_user.user_id
     LEFT JOIN (SELECT m.user_id, array_agg(m.site_id ORDER BY m.site_id ASC) AS sites
       FROM master_teacher_site_relation AS m
       GROUP BY m.user_id) AS relation ON relation.user_id = tlp_user.user_id
-  WHERE position = 'master teacher'`;
+  WHERE ${allTeachers ? '' : 'tlp_user.user_id = $1 AND'} position = 'master teacher'`;
 
 // get a teacher by id
 router.get('/:teacherId', async (req, res) => {
@@ -62,20 +59,19 @@ router.post('/', async (req, res) => {
     isAlphaNumeric(firebaseId, 'Firebase Id must be alphanumberic');
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
     isNanoId(inviteId, 'Invalid Invite Id Format');
-    const teacher = await pool.query(
-      `INSERT INTO general_user (first_name, last_name, phone_number, email)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *;`,
-      [firstName, lastName, phoneNumber, email],
-    );
 
-    await pool.query(
-      `INSERT INTO tlp_user (user_id, firebase_id, position, active)
-      VALUES ($1, $2, $3, $4)
+    const newTeacher = await pool.query(
+      `INSERT INTO tlp_user
+        (firebase_id, first_name, last_name,
+        phone_number, email, position, active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
       [
-        teacher.rows[0].user_id,
         firebaseId,
+        firstName,
+        lastName,
+        phoneNumber,
+        email,
         'master teacher',
         'active', // verified by default since it was through invite
       ],
@@ -84,7 +80,7 @@ router.post('/', async (req, res) => {
     // remove used invite from invites table
     await pool.query(`DELETE FROM invites WHERE invite_id = $1 RETURNING *;`, [inviteId]);
 
-    const addedTeacher = await pool.query(getTeachers(false), [teacher.rows[0].user_id]);
+    const addedTeacher = await pool.query(getTeachers(false), [newTeacher.rows[0].user_id]);
     res.status(200).send(keysToCamel(addedTeacher.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -96,17 +92,14 @@ router.put('/:teacherId', async (req, res) => {
   try {
     const { teacherId } = req.params;
     isNumeric(teacherId, 'Teacher Id must be a Number');
-    const { firstName, lastName, phoneNumber, email, active } = req.body;
+    const { firstName, lastName, phoneNumber, active } = req.body;
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
-    // Updating relevant values in general_user table
     await pool.query(
-      `UPDATE general_user
-      SET first_name = $1, last_name = $2, phone_number = $3, email = $4
+      `UPDATE tlp_user
+      SET first_name = $1, last_name = $2, phone_number = $3, active = $4
       WHERE user_id = $5`,
-      [firstName, lastName, phoneNumber, email, teacherId],
+      [firstName, lastName, phoneNumber, active, teacherId],
     );
-    // Updating relevant values in tlp_user table
-    await pool.query('UPDATE tlp_user SET active = $1 WHERE user_id = $2', [active, teacherId]);
     const updatedTeacher = await pool.query(getTeachers(false), [teacherId]);
     res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
   } catch (err) {
@@ -161,7 +154,7 @@ router.delete('/:teacherId', async (req, res) => {
     const tlpUser = await pool.query(`SELECT * FROM tlp_user WHERE user_id = $1`, [teacherId]);
     await firebaseAdmin.auth().deleteUser(tlpUser.rows[0].firebase_id);
     const deletedTeacher = await pool.query(
-      'DELETE FROM general_user WHERE user_id = $1 RETURNING *;',
+      'DELETE FROM tlp_user WHERE user_id = $1 RETURNING *;',
       [teacherId],
     );
     res.status(200).send(keysToCamel(deletedTeacher.rows[0]));
@@ -175,17 +168,14 @@ router.get('/all/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const allTeachers = await pool.query(
-      `SELECT tlp_user.*, gen.first_name, gen.last_name, gen.phone_number, gen.email, relation.sites
-    FROM tlp_user
-      INNER JOIN
-        (SELECT * FROM general_user WHERE general_user.user_id = $1)
-        AS gen ON gen.user_id = tlp_user.user_id
-      LEFT JOIN (SELECT m.user_id, array_agg(to_json(site.*) ORDER BY site.site_id) AS sites
-          FROM master_teacher_site_relation as m
-            INNER JOIN site ON site.site_id = m.site_id
-          GROUP BY m.user_id
-          ) AS relation ON relation.user_id = tlp_user.user_id
-    WHERE position = 'master teacher';`,
+      `SELECT tlp_user.*, relation.sites
+      FROM tlp_user
+        LEFT JOIN (SELECT m.user_id, array_agg(to_json(site.*) ORDER BY site.site_id) AS sites
+            FROM master_teacher_site_relation as m
+              INNER JOIN site ON site.site_id = m.site_id
+            GROUP BY m.user_id
+            ) AS relation ON relation.user_id = tlp_user.user_id
+      WHERE tlp_user.user_id = $1 AND position = 'master teacher';`,
       [userId],
     );
     res.status(200).json(keysToCamel(allTeachers.rows));

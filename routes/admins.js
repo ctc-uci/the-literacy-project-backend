@@ -6,12 +6,9 @@ const firebaseAdmin = require('../firebase');
 const router = Router();
 
 const getAdmins = (allAdmins) =>
-  `SELECT tlp_user.*, gen.first_name, gen.last_name, gen.phone_number, gen.email
+  `SELECT *
   FROM tlp_user
-    INNER JOIN
-      (SELECT * FROM general_user ${allAdmins ? '' : 'WHERE general_user.user_id = $1'})
-      AS gen ON gen.user_id = tlp_user.user_id
-  WHERE position = 'admin';`;
+  WHERE ${allAdmins ? '' : 'user_id = $1 AND '} position = 'admin';`;
 
 // get admin by id
 router.get('/:adminId', async (req, res) => {
@@ -42,19 +39,17 @@ router.post('/', async (req, res) => {
     isAlphaNumeric(firebaseId, 'Firebase ID must be AlphaNumeric');
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
     isNanoId(inviteId, 'Invalid Invite Id Format');
-    const admin = await pool.query(
-      `INSERT INTO general_user (first_name, last_name, phone_number, email)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *;`,
-      [firstName, lastName, phoneNumber, email],
-    );
-    await pool.query(
-      `INSERT INTO tlp_user (user_id, firebase_id, position, active)
-      VALUES ($1, $2, $3, $4)
+    const newAdmin = await pool.query(
+      `INSERT INTO tlp_user
+      (firebase_id, first_name, last_name, phone_number, email, position, active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;`,
       [
-        admin.rows[0].user_id,
         firebaseId,
+        firstName,
+        lastName,
+        phoneNumber,
+        email,
         'admin',
         'active', // verified by default since it was through invite
       ],
@@ -62,8 +57,7 @@ router.post('/', async (req, res) => {
 
     // remove used invite from invites table
     await pool.query(`DELETE FROM invites WHERE invite_id = $1 RETURNING *;`, [inviteId]);
-
-    const addedAdmin = await pool.query(getAdmins(false), [admin.rows[0].user_id]);
+    const addedAdmin = await pool.query(getAdmins(false), [newAdmin.rows[0].user_id]);
     res.status(200).send(keysToCamel(addedAdmin.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -75,19 +69,16 @@ router.put('/:adminId', async (req, res) => {
   try {
     const { adminId } = req.params;
     isNumeric(adminId, 'Admin Id must be a Number');
-    const { firstName, lastName, phoneNumber, email, active } = req.body;
+    const { firstName, lastName, phoneNumber, active } = req.body;
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
-    // Updating relevant values in general_user table
     await pool.query(
-      `UPDATE general_user
-      SET first_name = $1, last_name = $2, phone_number = $3, email = $4
+      `UPDATE tlp_user
+      SET first_name = $1, last_name = $2, phone_number = $3, active = $4
       WHERE user_id = $5`,
-      [firstName, lastName, phoneNumber, email, adminId],
+      [firstName, lastName, phoneNumber, active, adminId],
     );
-    // Updating relevant values in tlp_user table
-    await pool.query('UPDATE tlp_user SET active = $1 WHERE user_id = $2', [active, adminId]);
-    const updatedTeacher = await pool.query(getAdmins(false), [adminId]);
-    res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
+    const updatedAdmin = await pool.query(getAdmins(false), [adminId]);
+    res.status(200).send(keysToCamel(updatedAdmin.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -100,7 +91,7 @@ router.delete('/:adminId', async (req, res) => {
     const tlpUser = await pool.query(`SELECT * FROM tlp_user WHERE user_id = $1`, [adminId]);
     await firebaseAdmin.auth().deleteUser(tlpUser.rows[0].firebase_id);
     const deletedAdmin = await pool.query(
-      `DELETE FROM general_user WHERE user_id = $1
+      `DELETE FROM tlp_user WHERE user_id = $1
       RETURNING *;`,
       [adminId],
     );

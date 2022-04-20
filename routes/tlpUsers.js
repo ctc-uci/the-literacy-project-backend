@@ -43,7 +43,7 @@ router.post('/new-invite', async (req, res) => {
 
     // do not allow user to create an account if there's an existing account
     // delete existing invite if it uses the same email
-    const existingEmail = await pool.query(`SELECT * FROM general_user WHERE email = $1`, [email]);
+    const existingEmail = await pool.query(`SELECT * FROM tlp_user WHERE email = $1`, [email]);
     if (existingEmail.rows.length > 0) {
       throw new Error('There is already an existing account with that email.');
     }
