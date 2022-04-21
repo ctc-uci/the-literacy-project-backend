@@ -76,23 +76,32 @@ router.post('/', async (req, res) => {
       isPhoneNumber(secondContactInfo.phoneNumber, 'Invalid Second Phone Number');
     }
 
-    const primaryContactId = await addContact(primaryContactInfo);
-    let secondContactId = null;
+    await addContact(primaryContactInfo);
     if (secondContactInfo) {
-      secondContactId = await addContact(secondContactInfo);
+      await addContact(secondContactInfo);
     }
 
     const newSite = await db.query(
       `INSERT INTO site (
         site_name, address_street, address_apt, address_city, address_state,
-        address_zip, area_id, primary_contact_id
-        ${secondContactId ? ', second_contact_id' : ''}
+        address_zip, area_id, primary_contact_first_name, primary_contact_last_name,
+        primary_contact_title, primary_contact_phone_number,
+        ${secondContactInfo.firstName ? ', second_contact_first_name' : ''},
+        ${secondContactInfo.lastName ? ', second_contact_last_name' : ''},
+        ${secondContactInfo.title ? ', second_contact_title' : ''},
+        ${secondContactInfo.email ? ', second_contact_email' : ''},
+        ${secondContactInfo.phoneNumber ? ', second_contact_phone_number' : ''}
         , active
         ${notes ? ', notes' : ''})
       VALUES (
         $(siteName), $(addressStreet), $(addressApt), $(addressCity), $(addressState)
-        $(addressZip), $(areaId), $(primaryContactId)
-        ${secondContactId ? ', $(secondContactId)' : ''}
+        $(addressZip), $(areaId), $(primaryContactFirstName), $(primaryContactLastName),
+        $(primaryContactTitle), $(primaryContactEmail), $(primaryContactPhoneNumber)
+        ${secondContactInfo.firstName ? ', $(secondContactInfo.firstName)' : ''},
+        ${secondContactInfo.lastName ? ', $(secondContactInfo.lastName)' : ''},
+        ${secondContactInfo.title ? ', $(secondContactInfo.title)' : ''},
+        ${secondContactInfo.email ? ', $(secondContacInfo.email)' : ''},
+        ${secondContactInfo.phoneNumber ? ', $(secondContactInfo.phoneNumber)' : ''},
         , $(active)
         ${notes ? ', $(notes)' : ''})
       RETURNING *`,
@@ -104,8 +113,8 @@ router.post('/', async (req, res) => {
         addressState,
         addressZip,
         areaId,
-        primaryContactId,
-        secondContactId,
+        primaryContactInfo,
+        secondContactInfo,
         active,
         notes,
       },
