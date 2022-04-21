@@ -96,28 +96,29 @@ router.post('/', async (req, res) => {
       isPhoneNumber(secondContactInfo.phone, 'Invalid Second Phone Number');
     }
 
-    // syntax error at or near ")"
     const newSite = await db.query(
       `INSERT INTO site (
         site_name, address_street, address_apt, address_city, address_state,
         address_zip, area_id, primary_contact_first_name, primary_contact_last_name,
-        primary_contact_title, primary_contact_email, primary_contact_phone,
-        ${secondContactInfo.firstName ? 'second_contact_first_name' : ''},
-        ${secondContactInfo.lastName ? 'second_contact_last_name' : ''},
-        ${secondContactInfo.title ? 'second_contact_title' : ''},
-        ${secondContactInfo.email ? 'second_contact_email' : ''},
-        ${secondContactInfo.phone ? 'second_contact_phone' : ''},
-        active,
+        primary_contact_title, primary_contact_email, primary_contact_phone
+        ${secondContactInfo && secondContactInfo.firstName ? ', second_contact_first_name' : ''}
+        ${secondContactInfo && secondContactInfo.lastName ? ', second_contact_last_name' : ''}
+        ${secondContactInfo && secondContactInfo.title ? ', second_contact_title' : ''}
+        ${secondContactInfo && secondContactInfo.email ? ', second_contact_email' : ''}
+        ${secondContactInfo && secondContactInfo.phone ? ', second_contact_phone' : ''},
+        active
         ${notes ? ', notes' : ''})
       VALUES (
-        $(siteName), $(addressStreet), $(addressApt), $(addressCity), $(addressState)
+        $(siteName), $(addressStreet), $(addressApt), $(addressCity), $(addressState),
         $(addressZip), $(areaId), $(primaryContactInfo.firstName), $(primaryContactInfo.lastName),
         $(primaryContactInfo.title), $(primaryContactInfo.email), $(primaryContactInfo.phone)
-        ${secondContactInfo.firstName ? ', $(secondContactInfo.firstName)' : ''}
-        ${secondContactInfo.lastName ? ', $(secondContactInfo.lastName)' : ''}
-        ${secondContactInfo.title ? ', $(secondContactInfo.title)' : ''}
-        ${secondContactInfo.email ? ', $(secondContactInfo.email)' : ''}
-        ${secondContactInfo.phone ? ', $(secondContactInfo.phone)' : ''}
+        ${
+          secondContactInfo && secondContactInfo.firstName ? ', $(secondContactInfo.firstName)' : ''
+        }
+        ${secondContactInfo && secondContactInfo.lastName ? ', $(secondContactInfo.lastName)' : ''}
+        ${secondContactInfo && secondContactInfo.title ? ', $(secondContactInfo.title)' : ''}
+        ${secondContactInfo && secondContactInfo.email ? ', $(secondContactInfo.email)' : ''}
+        ${secondContactInfo && secondContactInfo.phone ? ', $(secondContactInfo.phone)' : ''},
         $(active)
         ${notes ? ', $(notes)' : ''})
       RETURNING *`,
@@ -136,7 +137,6 @@ router.post('/', async (req, res) => {
       },
     );
 
-    console.log(primaryContactInfo);
     const site = await pool.query(getSites(false), [newSite[0].site_id]);
     res
       .status(200)
