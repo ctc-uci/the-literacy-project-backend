@@ -12,10 +12,20 @@ const {
 const router = Router();
 
 const getSites = (allSites) =>
-  `SELECT site.*, to_json(contact1) as "primaryContactInfo", to_json(contact2) as "secondContactInfo"
+  `SELECT site.site_id, site.site_name,
+  site.address_street, site.address_city, site.address_zip,
+  site.area_id, site.notes, site.active,
+  to_json((SELECT s FROM (SELECT primary_contact_first_name AS "firstName",
+						  primary_contact_last_name AS "lastName",
+						  primary_contact_title AS "title",
+						  primary_contact_email AS "email",
+						  primary_contact_phone AS "phone") AS s)) as "primaryContactInfo",
+  to_json((SELECT s FROM (SELECT second_contact_first_name AS "firstName",
+						  second_contact_last_name AS "lastName",
+						  second_contact_title AS "title",
+						  second_contact_email AS "email",
+						  second_contact_phone AS "phone") AS s)) as "secondContactInfo"
   FROM site
-    INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
-    LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
   ${allSites ? '' : 'WHERE site_id = $1'}`;
 
 // get a site by id
@@ -34,7 +44,15 @@ router.get('/:siteId', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const sites = await pool.query(getSites(true));
-    res.status(200).json(keysToCamel(sites.rows));
+    res
+      .status(200)
+      .json(
+        keysToCamel(
+          sites.rows.map((s) =>
+            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          ),
+        ),
+      );
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -46,7 +64,15 @@ router.get('/area/:areaId', async (req, res) => {
     const { areaId } = req.params;
     isNumeric(areaId, 'Area Id must be a Number');
     const sites = await pool.query(`${getSites(true)} WHERE site.area_id = $1`, [areaId]);
-    res.status(200).json(keysToCamel(sites.rows));
+    res
+      .status(200)
+      .json(
+        keysToCamel(
+          sites.rows.map((s) =>
+            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          ),
+        ),
+      );
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -121,7 +147,15 @@ router.post('/', async (req, res) => {
     );
 
     const site = await pool.query(getSites(false), [newSite[0].site_id]);
-    res.status(200).send(keysToCamel(site.rows[0]));
+    res
+      .status(200)
+      .send(
+        keysToCamel(
+          [site.rows[0]].map((s) =>
+            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          ),
+        ),
+      );
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -234,7 +268,15 @@ router.put('/:siteId', async (req, res) => {
       },
     );
     const site = await pool.query(getSites(false), [siteId]);
-    res.status(200).send(keysToCamel(site.rows[0]));
+    res
+      .status(200)
+      .send(
+        keysToCamel(
+          site.rows[0].map((s) =>
+            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          ),
+        ),
+      );
   } catch (err) {
     res.status(400).send(err.message);
   }
@@ -247,7 +289,15 @@ router.delete('/:siteId', async (req, res) => {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
     const site = await pool.query('DELETE FROM site WHERE site_id = $1 RETURNING *', [siteId]);
-    res.status(200).send(keysToCamel(site.rows[0]));
+    res
+      .status(200)
+      .send(
+        keysToCamel(
+          site.rows[0].map((s) =>
+            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          ),
+        ),
+      );
   } catch (err) {
     res.status(400).send(err.message);
   }
