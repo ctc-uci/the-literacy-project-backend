@@ -1,13 +1,6 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const {
-  isNumeric,
-  isZipCode,
-  keysToCamel,
-  isPhoneNumber,
-  addContact,
-  isBoolean,
-} = require('./utils');
+const { isNumeric, isZipCode, keysToCamel, isPhoneNumber, isBoolean } = require('./utils');
 
 const router = Router();
 
@@ -94,41 +87,38 @@ router.post('/', async (req, res) => {
       active,
       notes,
     } = req.body;
+
     isZipCode(addressZip, 'Zip code is invalid');
     isNumeric(areaId, 'Area Id must be a Number');
-    isPhoneNumber(primaryContactInfo.phoneNumber, 'Invalid Primary Phone Number');
+    isPhoneNumber(primaryContactInfo.phone, 'Invalid Primary Phone Number');
     isBoolean(active, 'Active is not a boolean');
     if (secondContactInfo) {
-      isPhoneNumber(secondContactInfo.phoneNumber, 'Invalid Second Phone Number');
+      isPhoneNumber(secondContactInfo.phone, 'Invalid Second Phone Number');
     }
 
-    await addContact(primaryContactInfo);
-    if (secondContactInfo) {
-      await addContact(secondContactInfo);
-    }
-
+    // syntax error at or near ")"
     const newSite = await db.query(
       `INSERT INTO site (
         site_name, address_street, address_apt, address_city, address_state,
         address_zip, area_id, primary_contact_first_name, primary_contact_last_name,
-        primary_contact_title, primary_contact_phone_number,
-        ${secondContactInfo.firstName ? ', second_contact_first_name' : ''},
-        ${secondContactInfo.lastName ? ', second_contact_last_name' : ''},
-        ${secondContactInfo.title ? ', second_contact_title' : ''},
-        ${secondContactInfo.email ? ', second_contact_email' : ''},
-        ${secondContactInfo.phoneNumber ? ', second_contact_phone_number' : ''}
-        , active
+        primary_contact_title, primary_contact_email, primary_contact_phone,
+        ${secondContactInfo.firstName ? 'second_contact_first_name' : ''},
+        ${secondContactInfo.lastName ? 'second_contact_last_name' : ''},
+        ${secondContactInfo.title ? 'second_contact_title' : ''},
+        ${secondContactInfo.email ? 'second_contact_email' : ''},
+        ${secondContactInfo.phone ? 'second_contact_phone' : ''},
+        active,
         ${notes ? ', notes' : ''})
       VALUES (
         $(siteName), $(addressStreet), $(addressApt), $(addressCity), $(addressState)
         $(addressZip), $(areaId), $(primaryContactInfo.firstName), $(primaryContactInfo.lastName),
-        $(primaryContactInfo.title), $(primaryContactInfo.email), $(primaryContact.phoneNumber)
-        ${secondContactInfo.firstName ? ', $(secondContactInfo.firstName)' : ''},
-        ${secondContactInfo.lastName ? ', $(secondContactInfo.lastName)' : ''},
-        ${secondContactInfo.title ? ', $(secondContactInfo.title)' : ''},
-        ${secondContactInfo.email ? ', $(secondContacInfo.email)' : ''},
-        ${secondContactInfo.phoneNumber ? ', $(secondContactInfo.phoneNumber)' : ''},
-        , $(active)
+        $(primaryContactInfo.title), $(primaryContactInfo.email), $(primaryContactInfo.phone)
+        ${secondContactInfo.firstName ? ', $(secondContactInfo.firstName)' : ''}
+        ${secondContactInfo.lastName ? ', $(secondContactInfo.lastName)' : ''}
+        ${secondContactInfo.title ? ', $(secondContactInfo.title)' : ''}
+        ${secondContactInfo.email ? ', $(secondContactInfo.email)' : ''}
+        ${secondContactInfo.phone ? ', $(secondContactInfo.phone)' : ''}
+        $(active)
         ${notes ? ', $(notes)' : ''})
       RETURNING *`,
       {
@@ -146,6 +136,7 @@ router.post('/', async (req, res) => {
       },
     );
 
+    console.log(primaryContactInfo);
     const site = await pool.query(getSites(false), [newSite[0].site_id]);
     res
       .status(200)
@@ -219,8 +210,8 @@ router.put('/:siteId', async (req, res) => {
           : ''
       },
       ${
-        primaryContactInfo && primaryContactInfo.phoneNumber
-          ? ', primary_contact_phone_number = $(primaryContactInfo.phoneNumber'
+        primaryContactInfo && primaryContactInfo.phone
+          ? ', primary_contact_phone = $(primaryContactInfo.phone'
           : ''
       }
       ${
@@ -244,8 +235,8 @@ router.put('/:siteId', async (req, res) => {
           : ''
       },
       ${
-        secondContactInfo && secondContactInfo.phoneNumber
-          ? ', second_contact_phone_number = $(secondContactInfo.phoneNumber'
+        secondContactInfo && secondContactInfo.phone
+          ? ', second_contact_phone = $(secondContactInfo.phone'
           : ''
       }
       ${active != null ? `, active = '$(active)'` : ''}

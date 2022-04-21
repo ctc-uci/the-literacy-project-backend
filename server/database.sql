@@ -71,7 +71,7 @@ CREATE TABLE site (
   primary_contact_last_name VARCHAR(255) NOT NULL,
   primary_contact_title VARCHAR(255),
   primary_contact_email VARCHAR(255) NOT NULL,
-  primary_contact_phone_number VARCHAR(15) NOT NULL,
+  primary_contact_phone VARCHAR(15) NOT NULL,
   second_contact_first_name VARCHAR(255),
   second_contact_last_name VARCHAR(255),
   second_contact_title VARCHAR(255),
