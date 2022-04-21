@@ -95,8 +95,8 @@ router.post('/', async (req, res) => {
         ${notes ? ', notes' : ''})
       VALUES (
         $(siteName), $(addressStreet), $(addressApt), $(addressCity), $(addressState)
-        $(addressZip), $(areaId), $(primaryContactFirstName), $(primaryContactLastName),
-        $(primaryContactTitle), $(primaryContactEmail), $(primaryContactPhoneNumber)
+        $(addressZip), $(areaId), $(primaryContactInfo.firstName), $(primaryContactInfo.lastName),
+        $(primaryContactInfo.title), $(primaryContactInfo.email), $(primaryContact.phoneNumber)
         ${secondContactInfo.firstName ? ', $(secondContactInfo.firstName)' : ''},
         ${secondContactInfo.lastName ? ', $(secondContactInfo.lastName)' : ''},
         ${secondContactInfo.title ? ', $(secondContactInfo.title)' : ''},
@@ -166,17 +166,17 @@ router.put('/:siteId', async (req, res) => {
       ${areaId ? ', area_id = $(areaId)' : ''}
       ${
         primaryContactInfo && primaryContactInfo.firstName
-          ? ', primary_contact_first_name = $(primaryContactInfo.primaryContactFirstName)'
+          ? ', primary_contact_first_name = $(primaryContactInfo.firstName)'
           : ''
       },
       ${
         primaryContactInfo && primaryContactInfo.lastName
-          ? ', primary_contact_last_name = $(primaryContactInfo.primaryContactLastName)'
+          ? ', primary_contact_last_name = $(primaryContactInfo.lastName)'
           : ''
       },
       ${
         primaryContactInfo && primaryContactInfo.title
-          ? ', primary_contact_title = $(primaryontactInfo.primaryContactTitle)'
+          ? ', primary_contact_title = $(primaryontactInfo.title)'
           : ''
       },
       ${
@@ -191,17 +191,17 @@ router.put('/:siteId', async (req, res) => {
       }
       ${
         secondContactInfo && secondContactInfo.firstName
-          ? ', second_contact_first_name = $(secondContactInfo.secondContactFirstName)'
+          ? ', second_contact_first_name = $(secondContactInfo.firstName)'
           : ''
       },
       ${
         secondContactInfo && secondContactInfo.lastName
-          ? ', second_contact_last_name = $(secondContactInfo.secondContactLastName)'
+          ? ', second_contact_last_name = $(secondContactInfo.lastName)'
           : ''
       },
       ${
         secondContactInfo && secondContactInfo.title
-          ? ', second_contact_title = $(secondContactInfo.secondContactTitle)'
+          ? ', second_contact_title = $(secondContactInfo.title)'
           : ''
       },
       ${
