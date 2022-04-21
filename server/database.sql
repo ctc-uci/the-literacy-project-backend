@@ -86,7 +86,7 @@ CREATE TABLE student_group (
   year INT NOT NULL,
   cycle cycles NOT NULL,
   master_teacher_id INT REFERENCES tlp_user(user_id) ON DELETE SET NULL,
-  site_id INT REFERENCES site(site_id) ON DELETE CASCADE NOT NULL,
+  site_id INT REFERENCES site(site_id) ON DELETE CASCADE,
   meeting_day weekday NOT NULL,
   meeting_time TIME NOT NULL
 );
