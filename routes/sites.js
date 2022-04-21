@@ -140,8 +140,8 @@ router.put('/:siteId', async (req, res) => {
       addressState,
       addressZip,
       areaId,
-      primaryContactId,
-      secondContactId,
+      primaryContactInfo,
+      secondContactInfo,
       active,
       notes,
     } = req.body;
@@ -151,14 +151,8 @@ router.put('/:siteId', async (req, res) => {
     if (areaId) {
       isNumeric(areaId, 'Area Id must be a Number');
     }
-    if (primaryContactId) {
-      isNumeric(primaryContactId, 'Primary Contact Id must be a Number');
-    }
     if (active) {
       isBoolean(active, 'Active is not a boolean');
-    }
-    if (secondContactId) {
-      isNumeric(secondContactId, 'Secondary Contact Id must be a Number');
     }
     await db.query(
       `UPDATE site
@@ -170,8 +164,56 @@ router.put('/:siteId', async (req, res) => {
       ${addressState ? ', address_state = $(addressState)' : ''}
       ${addressZip ? ', address_zip = $(addressZip)' : ''}
       ${areaId ? ', area_id = $(areaId)' : ''}
-      ${primaryContactId ? ', primary_contact_id = $(primaryContactId)' : ''}
-      ${secondContactId ? ', second_contact_id = $(secondContactId)' : ''}
+      ${
+        primaryContactInfo && primaryContactInfo.firstName
+          ? ', primary_contact_first_name = $(primaryContactInfo.primaryContactFirstName)'
+          : ''
+      },
+      ${
+        primaryContactInfo && primaryContactInfo.lastName
+          ? ', primary_contact_last_name = $(primaryContactInfo.primaryContactLastName)'
+          : ''
+      },
+      ${
+        primaryContactInfo && primaryContactInfo.title
+          ? ', primary_contact_title = $(primaryontactInfo.primaryContactTitle)'
+          : ''
+      },
+      ${
+        primaryContactInfo && primaryContactInfo.email
+          ? ', primary_contact_email = $(primaryContactInfo.email)'
+          : ''
+      },
+      ${
+        primaryContactInfo && primaryContactInfo.phoneNumber
+          ? ', primary_contact_phone_number = $(primaryContactInfo.phoneNumber'
+          : ''
+      }
+      ${
+        secondContactInfo && secondContactInfo.firstName
+          ? ', second_contact_first_name = $(secondContactInfo.secondContactFirstName)'
+          : ''
+      },
+      ${
+        secondContactInfo && secondContactInfo.lastName
+          ? ', second_contact_last_name = $(secondContactInfo.secondContactLastName)'
+          : ''
+      },
+      ${
+        secondContactInfo && secondContactInfo.title
+          ? ', second_contact_title = $(secondContactInfo.secondContactTitle)'
+          : ''
+      },
+      ${
+        secondContactInfo && secondContactInfo.email
+          ? ', second_contact_email = $(secondContactInfo.email)'
+          : ''
+      },
+      ${
+        secondContactInfo && secondContactInfo.phoneNumber
+          ? ', second_contact_phone_number = $(secondContactInfo.phoneNumber'
+          : ''
+      }
       ${active != null ? `, active = '$(active)'` : ''}
       ${notes ? ', notes = $(notes)' : ''}
       WHERE site_id = $(siteId)
@@ -185,8 +227,8 @@ router.put('/:siteId', async (req, res) => {
         addressState,
         addressZip,
         areaId,
-        primaryContactId,
-        secondContactId,
+        primaryContactInfo,
+        secondContactInfo,
         active,
         notes,
       },
