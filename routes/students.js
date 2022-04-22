@@ -102,6 +102,28 @@ router.get('/other-sites/:siteId', async (req, res) => {
   }
 });
 
+// get all students not taught by a given master teacher
+router.get('/other-teachers/:masterTeacherId', async (req, res) => {
+  try {
+    const { masterTeacherId } = req.params;
+    isNumeric(masterTeacherId, 'Master Teacher Id must be a Number');
+    const students = await pool.query(
+      `SELECT student.*, student_group.*
+      FROM student
+        INNER JOIN (SELECT s.group_id, s.site_id, s.year, s.cycle, s.master_teacher_id
+              FROM student_group AS s) AS student_group
+              ON student_group.group_id = student.student_group_id AND student_group.master_teacher_id != $1
+        INNER JOIN (SELECT site.site_id, site.area_id
+              FROM site) AS site
+              ON site.site_id = student_group.site_id;`,
+      [masterTeacherId],
+    );
+    res.status(200).json(keysToCamel(students.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // get all students for a given area
 router.get('/area/:areaId', async (req, res) => {
   try {

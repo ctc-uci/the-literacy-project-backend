@@ -1,11 +1,8 @@
 DROP TYPE pos CASCADE;
 DROP TYPE cycles CASCADE;
 DROP TYPE user_status CASCADE;
-<<<<<<< HEAD
-=======
 DROP TYPE ethnicities;
 DROP TYPE weekday;
->>>>>>> dev
 DROP TYPE genders CASCADE;
 CREATE TYPE pos AS ENUM('admin', 'master teacher');
 CREATE TYPE cycles AS ENUM('1', '2', '3', '4');
