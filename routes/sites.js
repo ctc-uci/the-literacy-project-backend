@@ -23,7 +23,7 @@ const noMT = () =>
     (SELECT site_id FROM master_teacher_site_relation)`;
 
 // get sites without master teacher
-router.get('/noMT', async (req, res) => {
+router.get('/no-master-teacher', async (req, res) => {
   try {
     const s = await pool.query(noMT());
     res.status(200).send(keysToCamel(s.rows));
