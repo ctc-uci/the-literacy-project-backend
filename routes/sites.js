@@ -12,10 +12,7 @@ const {
 const router = Router();
 
 const getSites = (allSites) =>
-  `SELECT site.*, to_json(contact1) as "primaryContactInfo", to_json(contact2) as "secondContactInfo"
-  FROM site
-    INNER JOIN general_user as contact1 ON contact1.user_id = site.primary_contact_id
-    LEFT JOIN general_user as contact2 ON contact2.user_id = site.second_contact_id
+  `SELECT * FROM site
   ${allSites ? '' : 'WHERE site_id = $1'}`;
 
 // get a site by id
