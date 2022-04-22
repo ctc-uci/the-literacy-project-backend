@@ -5,7 +5,7 @@ const { isNumeric, keysToCamel } = require('./utils');
 const router = Router();
 
 const getStudentGroups = (conditions = '') =>
-  `SELECT student_group.*, relation.students
+  `SELECT student_group.*, site.site_name, site.address_street, site.address_city, site.address_zip, area.area_name, relation.students
   FROM student_group
     LEFT JOIN (SELECT s.student_group_id,
                       array_agg(json_build_object('student_id', s.student_id,
@@ -20,6 +20,10 @@ const getStudentGroups = (conditions = '') =>
         FROM student AS s
         GROUP BY s.student_group_id) AS relation
     ON relation.student_group_id = student_group.group_id
+    JOIN site
+    ON site.site_id = student_group.site_id
+    JOIN area
+    ON site.area_id = area.area_id
   ${conditions};`;
 
 // get a student group by id
