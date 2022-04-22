@@ -6,7 +6,7 @@ const router = Router();
 
 const getSites = (allSites) =>
   `SELECT site.site_id, site.site_name,
-  site.address_street, site.address_city, site.address_zip,
+  site.address_street, site.address_apt, site.address_city, site.address_state,site.address_zip,
   site.area_id, site.notes, site.active,
   to_json((SELECT s FROM (SELECT primary_contact_first_name AS "firstName",
 						  primary_contact_last_name AS "lastName",
@@ -193,50 +193,50 @@ router.put('/:siteId', async (req, res) => {
         primaryContactInfo && primaryContactInfo.firstName
           ? ', primary_contact_first_name = $(primaryContactInfo.firstName)'
           : ''
-      },
+      }
       ${
         primaryContactInfo && primaryContactInfo.lastName
           ? ', primary_contact_last_name = $(primaryContactInfo.lastName)'
           : ''
-      },
+      }
       ${
         primaryContactInfo && primaryContactInfo.title
-          ? ', primary_contact_title = $(primaryontactInfo.title)'
+          ? ', primary_contact_title = $(primaryContactInfo.title)'
           : ''
-      },
+      }
       ${
         primaryContactInfo && primaryContactInfo.email
           ? ', primary_contact_email = $(primaryContactInfo.email)'
           : ''
-      },
+      }
       ${
         primaryContactInfo && primaryContactInfo.phone
-          ? ', primary_contact_phone = $(primaryContactInfo.phone'
+          ? ', primary_contact_phone = $(primaryContactInfo.phone)'
           : ''
       }
       ${
         secondContactInfo && secondContactInfo.firstName
           ? ', second_contact_first_name = $(secondContactInfo.firstName)'
           : ''
-      },
+      }
       ${
         secondContactInfo && secondContactInfo.lastName
           ? ', second_contact_last_name = $(secondContactInfo.lastName)'
           : ''
-      },
+      }
       ${
         secondContactInfo && secondContactInfo.title
           ? ', second_contact_title = $(secondContactInfo.title)'
           : ''
-      },
+      }
       ${
         secondContactInfo && secondContactInfo.email
           ? ', second_contact_email = $(secondContactInfo.email)'
           : ''
-      },
+      }
       ${
         secondContactInfo && secondContactInfo.phone
-          ? ', second_contact_phone = $(secondContactInfo.phone'
+          ? ', second_contact_phone = $(secondContactInfo.phone)'
           : ''
       }
       ${active != null ? `, active = '$(active)'` : ''}
@@ -259,15 +259,7 @@ router.put('/:siteId', async (req, res) => {
       },
     );
     const site = await pool.query(getSites(false), [siteId]);
-    res
-      .status(200)
-      .send(
-        keysToCamel(
-          site.rows[0].map((s) =>
-            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
-          ),
-        ),
-      );
+    res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
