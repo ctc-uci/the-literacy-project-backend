@@ -92,7 +92,7 @@ router.post('/', async (req, res) => {
     isNumeric(areaId, 'Area Id must be a Number');
     isPhoneNumber(primaryContactInfo.phone, 'Invalid Primary Phone Number');
     isBoolean(active, 'Active is not a boolean');
-    if (secondContactInfo) {
+    if (secondContactInfo.phone) {
       isPhoneNumber(secondContactInfo.phone, 'Invalid Second Phone Number');
     }
 
@@ -276,8 +276,10 @@ router.delete('/:siteId', async (req, res) => {
       .status(200)
       .send(
         keysToCamel(
-          site.rows[0].map((s) =>
-            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          [site.rows[0]].map((s) =>
+            s.secondContactInfo && s.secondContactInfo.firstName
+              ? s
+              : { ...s, secondContactInfo: null },
           ),
         ),
       );
