@@ -5,20 +5,7 @@ const { isNumeric, isZipCode, keysToCamel, isPhoneNumber, isBoolean } = require(
 const router = Router();
 
 const getSites = (allSites) =>
-  `SELECT site.site_id, site.site_name,
-  site.address_street, site.address_apt, site.address_city, site.address_state,site.address_zip,
-  site.area_id, site.notes, site.active,
-  to_json((SELECT s FROM (SELECT primary_contact_first_name AS "firstName",
-						  primary_contact_last_name AS "lastName",
-						  primary_contact_title AS "title",
-						  primary_contact_email AS "email",
-						  primary_contact_phone AS "phone") AS s)) as "primaryContactInfo",
-  to_json((SELECT s FROM (SELECT second_contact_first_name AS "firstName",
-						  second_contact_last_name AS "lastName",
-						  second_contact_title AS "title",
-						  second_contact_email AS "email",
-						  second_contact_phone AS "phone") AS s)) as "secondContactInfo"
-  FROM site
+  `SELECT * FROM site
   ${allSites ? '' : 'WHERE site_id = $1'}`;
 
 // get a site by id
