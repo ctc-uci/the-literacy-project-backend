@@ -89,7 +89,7 @@ const camelToSnake = (key) => {
 
 const addContact = async (contactInfo) => {
   const id = await pool.query(
-    `INSERT INTO general_user
+    `INSERT INTO tlp_user
     (first_name, last_name, phone_number, email, title)
     VALUES ($1, $2, $3, $4, $5)
     RETURNING *`,
