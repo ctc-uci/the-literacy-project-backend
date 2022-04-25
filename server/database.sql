@@ -76,7 +76,7 @@ CREATE TABLE site (
   second_contact_last_name VARCHAR(255),
   second_contact_title VARCHAR(255),
   second_contact_email VARCHAR(255),
-  second_contact_phone_number VARCHAR(15)
+  second_contact_phone VARCHAR(15)
 );
 
 DROP TABLE student_group CASCADE;
