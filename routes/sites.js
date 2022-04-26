@@ -28,6 +28,21 @@ const getSites = (allSites) =>
   FROM site
   ${allSites ? '' : 'WHERE site_id = $1'}`;
 
+const noMT = () =>
+  `SELECT * FROM site
+    WHERE site_id NOT IN
+    (SELECT site_id FROM master_teacher_site_relation)`;
+
+// get sites without master teacher
+router.get('/no-master-teacher', async (req, res) => {
+  try {
+    const s = await pool.query(noMT());
+    res.status(200).send(keysToCamel(s.rows));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // get a site by id
 router.get('/:siteId', async (req, res) => {
   try {

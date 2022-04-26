@@ -94,7 +94,16 @@ router.put('/:areaId', async (req, res) => {
       RETURNING *;`,
       [areaName, active, areaId],
     );
-    res.status(200).send(keysToCamel(updatedArea.rows[0]));
+    const updatedSites = await pool.query(
+      `UPDATE site
+      SET active = $1
+      WHERE area_id = $2
+      RETURNING*;`,
+      [active, areaId],
+    );
+    res
+      .status(200)
+      .send({ area: keysToCamel(updatedArea.rows[0]), rows: keysToCamel(updatedSites.rows[0]) });
   } catch (err) {
     res.status(400).send(err.message);
   }
