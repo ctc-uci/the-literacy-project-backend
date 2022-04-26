@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, keysToCamel } = require('./utils');
+const { isNumeric, keysToCamel, isArray } = require('./utils');
 
 const router = Router();
 
@@ -171,6 +171,35 @@ router.post('/', async (req, res) => {
     const conditions = 'WHERE student.student_id = $1';
     const newStudent = await pool.query(studentsQuery(conditions), [student.rows[0].student_id]);
     res.status(200).send(keysToCamel(newStudent.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// update the student_group_id field for every given student_id
+router.put('/update-bulk', async (req, res) => {
+  try {
+    const { studentIds, studentGroupId } = req.body;
+    if (!isArray(studentIds)) {
+      throw new Error('studentIds must be an Array');
+    }
+    for (let i = 0; i < studentIds.length; i += 1) {
+      isNumeric(studentIds[i], 'studentIds must contain Numbers');
+    }
+    if (studentGroupId) {
+      isNumeric(studentGroupId, 'Student Group Id must be a Number');
+    }
+    const student = await db.query(
+      `UPDATE student
+      SET student_group_id = $(studentGroupId)
+      WHERE student_id = ANY ($(studentIds))
+      RETURNING *;`,
+      {
+        studentIds,
+        studentGroupId,
+      },
+    );
+    res.status(200).send(keysToCamel(student));
   } catch (err) {
     res.status(400).send(err.message);
   }

@@ -107,6 +107,7 @@ const addContact = async (contactInfo) => {
 };
 
 module.exports = {
+  isArray,
   isNumeric,
   isBoolean,
   isZipCode,
