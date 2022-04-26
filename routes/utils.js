@@ -104,6 +104,17 @@ const addContact = async (contactInfo) => {
   return id.rows[0].user_id;
 };
 
+// used in sites (delete) and students (getBySites)
+const getStudentsBySiteQuery = `SELECT student.*
+FROM student
+  INNER JOIN (SELECT s.group_id, s.site_id
+        FROM student_group AS s) AS student_group
+        ON student_group.group_id = student.student_group_id
+  INNER JOIN (SELECT site.site_id, site.area_id
+        FROM site) AS site
+        ON site.site_id = student_group.site_id
+WHERE site.site_id = $1;`;
+
 module.exports = {
   isNumeric,
   isBoolean,
@@ -114,4 +125,5 @@ module.exports = {
   camelToSnake,
   addContact,
   isNanoId,
+  getStudentsBySiteQuery,
 };
