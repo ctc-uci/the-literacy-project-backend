@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNum, isNumeric, keysToCamel, isArray } = require('./utils');
+const { isNumeric, keysToCamel, isArray } = require('./utils');
 
 const router = Router();
 
@@ -183,10 +183,12 @@ router.put('/update-bulk', async (req, res) => {
     if (!isArray(studentIds)) {
       throw new Error('studentIds must be an Array');
     }
-    if (studentIds.every(isNum) === false) {
-      throw new Error('studentIds must contain Numbers');
+    for (let i = 0; i < studentIds.length; i += 1) {
+      isNumeric(studentIds[i], 'studentIds must contain Numbers');
     }
-    isNumeric(studentGroupId, 'Student Group Id must be a Number');
+    if (studentGroupId) {
+      isNumeric(studentGroupId, 'Student Group Id must be a Number');
+    }
     const student = await db.query(
       `UPDATE student
       SET student_group_id = $(studentGroupId)
