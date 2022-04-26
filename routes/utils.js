@@ -6,6 +6,13 @@ const isNumeric = (value, errorMessage) => {
   }
 };
 
+const isNum = (value) => {
+  if (!/^\d+$/.test(value)) {
+    return false;
+  }
+  return true;
+};
+
 const isBoolean = (value, errorMessage) => {
   if (![true, false, 'true', 'false'].includes(value)) {
     throw new Error(errorMessage);
@@ -105,7 +112,9 @@ const addContact = async (contactInfo) => {
 };
 
 module.exports = {
+  isArray,
   isNumeric,
+  isNum,
   isBoolean,
   isZipCode,
   isAlphaNumeric,
