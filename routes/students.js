@@ -169,7 +169,7 @@ router.post('/', async (req, res) => {
       { firstName, lastName, gender, grade, homeTeacher, studentGroupId, ethnicity },
     );
     const conditions = 'WHERE student.student_id = $1';
-    const newStudent = await pool.query(studentsQuery(conditions), [student.rows[0].student_id]);
+    const newStudent = await pool.query(studentsQuery(conditions), [student[0].student_id]);
     res.status(200).send(keysToCamel(newStudent.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
