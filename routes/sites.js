@@ -107,7 +107,7 @@ router.post('/', async (req, res) => {
     isNumeric(areaId, 'Area Id must be a Number');
     isPhoneNumber(primaryContactInfo.phone, 'Invalid Primary Phone Number');
     isBoolean(active, 'Active is not a boolean');
-    if (secondContactInfo.phone) {
+    if (secondContactInfo && secondContactInfo.phone) {
       isPhoneNumber(secondContactInfo.phone, 'Invalid Second Phone Number');
     }
 
@@ -193,6 +193,12 @@ router.put('/:siteId', async (req, res) => {
     }
     if (active) {
       isBoolean(active, 'Active is not a boolean');
+    }
+    if (primaryContactInfo && primaryContactInfo.phone) {
+      isPhoneNumber(primaryContactInfo.phone, 'Invalid Second Phone Number');
+    }
+    if (secondContactInfo && secondContactInfo.phone) {
+      isPhoneNumber(secondContactInfo.phone, 'Invalid Second Phone Number');
     }
     await db.query(
       `UPDATE site
