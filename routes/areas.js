@@ -11,7 +11,7 @@ router.get('/area-management', async (req, res) => {
       SELECT area.*, site.num_sites, site.site_info, mt_info.num_mts, student_info.num_students
       FROM area
         LEFT JOIN
-          (SELECT site.area_id, COUNT(site.site_id)::int as num_sites, array_agg(json_build_object('site_id', site.site_id, 'site_name', site.site_name)) as site_info
+          (SELECT site.area_id, COUNT(site.site_id)::int as num_sites, array_agg(json_build_object('site_id', site.site_id, 'site_name', site.site_name, 'site_state', site.address_state)) as site_info
           FROM site
           GROUP BY site.area_id)
         AS site ON site.area_id = area.area_id

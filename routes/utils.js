@@ -118,6 +118,7 @@ FROM student
 WHERE site.site_id = $1;`;
 
 module.exports = {
+  isArray,
   isNumeric,
   isBoolean,
   isZipCode,
