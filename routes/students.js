@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, keysToCamel, isArray } = require('./utils');
+const { isNumeric, keysToCamel, getStudentsBySiteQuery, isArray } = require('./utils');
 
 const router = Router();
 
@@ -61,18 +61,7 @@ router.get('/site/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
-    const students = await pool.query(
-      `SELECT student.*
-      FROM student
-        INNER JOIN (SELECT s.group_id, s.site_id
-              FROM student_group AS s) AS student_group
-              ON student_group.group_id = student.student_group_id
-        INNER JOIN (SELECT site.site_id, site.area_id
-              FROM site) AS site
-              ON site.site_id = student_group.site_id
-      WHERE site.site_id = $1;`,
-      [siteId],
-    );
+    const students = await pool.query(getStudentsBySiteQuery, [siteId]);
     res.status(200).json(keysToCamel(students.rows));
   } catch (err) {
     res.status(400).send(err.message);

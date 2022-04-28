@@ -1,6 +1,13 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, isZipCode, keysToCamel, isPhoneNumber, isBoolean } = require('./utils');
+const {
+  isNumeric,
+  isZipCode,
+  keysToCamel,
+  isPhoneNumber,
+  isBoolean,
+  getStudentsBySiteQuery,
+} = require('./utils');
 
 const router = Router();
 
@@ -287,24 +294,28 @@ router.put('/:siteId', async (req, res) => {
   }
 });
 
-// delete site
-// does not delete area, master teacher, or students from site
+// delete site (also deletes students within that site)
+// does not delete area or master teacher
 router.delete('/:siteId', async (req, res) => {
   try {
     const { siteId } = req.params;
     isNumeric(siteId, 'Site Id must be a Number');
+    const studentsToDelete = await pool.query(getStudentsBySiteQuery, [siteId]).then((result) => {
+      return result;
+    });
+
+    // must delete students before sites
+    // deleting sites first would delete student groups (By cascade) and students sg would be null but students wont be deleted
+    studentsToDelete.rows.forEach(async (student) => {
+      isNumeric(student.student_id, 'Student Id must be a Number');
+      await pool.query(`DELETE FROM student WHERE student_id = $1 RETURNING *;`, [
+        student.student_id,
+      ]);
+    });
+
     const site = await pool.query('DELETE FROM site WHERE site_id = $1 RETURNING *', [siteId]);
-    res
-      .status(200)
-      .send(
-        keysToCamel(
-          [site.rows[0]].map((s) =>
-            s.secondContactInfo && s.secondContactInfo.firstName
-              ? s
-              : { ...s, secondContactInfo: null },
-          ),
-        ),
-      );
+
+    res.status(200).send(keysToCamel(site.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
