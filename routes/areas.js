@@ -8,7 +8,7 @@ const router = Router();
 router.get('/area-management', async (req, res) => {
   try {
     const areaInfo = await pool.query(`
-      SELECT area.*, site.num_sites, site.site_info, mt_info.num_mts, student_info.num_students
+      SELECT area.*, site.num_sites, site.site_info, mt_info.num_mts, student_info.num_students, student_info.year
       FROM area
         LEFT JOIN
           (SELECT site.area_id, COUNT(site.site_id)::int as num_sites, array_agg(json_build_object('site_id', site.site_id, 'site_name', site.site_name, 'site_state', site.address_state)) as site_info
@@ -24,17 +24,17 @@ router.get('/area-management', async (req, res) => {
           GROUP BY site.area_id)
         AS mt_info on mt_info.area_id = area.area_id
         LEFT JOIN
-          (SELECT site.area_id, COUNT(*)::int as num_students
+          (SELECT site.area_id, COUNT(*)::int as num_students, sg.year
           FROM student
             INNER JOIN
-              (SELECT sg.group_id, sg.site_id
+              (SELECT sg.group_id, sg.site_id, sg.year
               FROM student_group AS sg)
             AS sg ON sg.group_id = student.student_group_id
             INNER JOIN
               (SELECT site.site_id, site.area_id
               FROM site)
             AS site ON site.site_id = sg.site_id
-          GROUP BY site.area_id)
+          GROUP BY site.area_id, sg.year)
         AS student_info on student_info.area_id = area.area_id
       ORDER BY area.area_name;`);
     res.status(200).send(keysToCamel(areaInfo.rows));
