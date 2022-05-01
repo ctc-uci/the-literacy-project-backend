@@ -11,7 +11,7 @@ router.get('/area-management', async (req, res) => {
       SELECT area.*, site.num_sites, site.site_info, mt_info.num_mts, student_info.num_students, student_info.year
       FROM area
         LEFT JOIN
-          (SELECT site.area_id, COUNT(site.site_id)::int as num_sites, array_agg(json_build_object('site_id', site.site_id, 'site_name', site.site_name, 'site_state', site.address_state)) as site_info
+          (SELECT site.area_id, COUNT(site.site_id)::int as num_sites, array_agg(json_build_object('site_id', site.site_id, 'site_name', site.site_name)) as site_info
           FROM site
           GROUP BY site.area_id)
         AS site ON site.area_id = area.area_id
@@ -68,11 +68,11 @@ router.get('/', async (req, res) => {
 // create an area
 router.post('/', async (req, res) => {
   try {
-    const { areaName, active } = req.body;
+    const { areaName, active, areaState } = req.body;
     isBoolean(active, 'Active must be a boolean value');
     const newArea = await pool.query(
-      'INSERT INTO area (area_name, active) VALUES ($1, $2) RETURNING *;',
-      [areaName, active],
+      'INSERT INTO area (area_name, active, area_state) VALUES ($1, $2, $3) RETURNING *;',
+      [areaName, active, areaState],
     );
     res.status(200).send(keysToCamel(newArea.rows[0]));
   } catch (err) {
@@ -85,14 +85,14 @@ router.put('/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;
     isNumeric(areaId, 'Area Id must be a Number');
-    const { areaName, active } = req.body;
+    const { areaName, active, areaState } = req.body;
     isBoolean(active, 'Active must be a boolean value');
     const updatedArea = await pool.query(
       `UPDATE area
-      SET area_name = $1, active = $2
-      WHERE area_id = $3
+      SET area_name = $1, active = $2, area_state = $3
+      WHERE area_id = $4
       RETURNING *;`,
-      [areaName, active, areaId],
+      [areaName, active, areaState, areaId],
     );
     const updatedSites = await pool.query(
       `UPDATE site
@@ -110,7 +110,7 @@ router.put('/:areaId', async (req, res) => {
 });
 
 // delete an area
-// *does not delete corresponding sites*
+// *deletes corresponding sites*
 router.delete('/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;
