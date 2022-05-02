@@ -102,7 +102,6 @@ router.post('/', async (req, res) => {
       addressStreet,
       addressCity,
       addressApt,
-      addressState,
       addressZip,
       areaId,
       primaryContactInfo,
@@ -121,7 +120,7 @@ router.post('/', async (req, res) => {
 
     const newSite = await db.query(
       `INSERT INTO site (
-        site_name, address_street, address_apt, address_city, address_state,
+        site_name, address_street, address_apt, address_city,
         address_zip, area_id, primary_contact_first_name, primary_contact_last_name,
         primary_contact_title, primary_contact_email, primary_contact_phone
         ${secondContactInfo && secondContactInfo.firstName ? ', second_contact_first_name' : ''}
@@ -132,7 +131,7 @@ router.post('/', async (req, res) => {
         active
         ${notes ? ', notes' : ''})
       VALUES (
-        $(siteName), $(addressStreet), $(addressApt), $(addressCity), $(addressState),
+        $(siteName), $(addressStreet), $(addressApt), $(addressCity),
         $(addressZip), $(areaId), $(primaryContactInfo.firstName), $(primaryContactInfo.lastName),
         $(primaryContactInfo.title), $(primaryContactInfo.email), $(primaryContactInfo.phone)
         ${
@@ -150,7 +149,6 @@ router.post('/', async (req, res) => {
         addressStreet,
         addressApt,
         addressCity,
-        addressState,
         addressZip,
         areaId,
         primaryContactInfo,
@@ -185,7 +183,6 @@ router.put('/:siteId', async (req, res) => {
       addressStreet,
       addressApt,
       addressCity,
-      addressState,
       addressZip,
       areaId,
       primaryContactInfo,
@@ -215,7 +212,6 @@ router.put('/:siteId', async (req, res) => {
       ${addressStreet ? ', address_street = $(addressStreet)' : ''}
       ${addressApt ? ', address_apt = $(addressApt)' : ''}
       ${addressCity ? ', address_city = $(addressCity)' : ''}
-      ${addressState ? ', address_state = $(addressState)' : ''}
       ${addressZip ? ', address_zip = $(addressZip)' : ''}
       ${areaId ? ', area_id = $(areaId)' : ''}
       ${
@@ -278,7 +274,6 @@ router.put('/:siteId', async (req, res) => {
         addressStreet,
         addressApt,
         addressCity,
-        addressState,
         addressZip,
         areaId,
         primaryContactInfo,
