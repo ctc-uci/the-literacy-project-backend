@@ -13,7 +13,7 @@ const router = Router();
 
 const getSites = (allSites) =>
   `SELECT site.site_id, site.site_name,
-  site.address_street, site.address_apt, site.address_city, site.address_state,site.address_zip,
+  site.address_street, site.address_apt, site.address_city, area.area_state AS address_state,site.address_zip,
   site.area_id, site.notes, site.active, area.area_name,
   to_json((SELECT s FROM (SELECT primary_contact_first_name AS "firstName",
 						  primary_contact_last_name AS "lastName",
