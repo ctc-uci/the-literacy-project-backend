@@ -52,7 +52,8 @@ DROP TABLE area CASCADE;
 CREATE TABLE area (
   area_id SERIAL PRIMARY KEY,
   area_name VARCHAR(255) UNIQUE NOT NULL,
-  active BOOLEAN NOT NULL
+  active BOOLEAN NOT NULL,
+  area_state states NOT NULL
 );
 
 DROP TABLE site CASCADE;
@@ -62,7 +63,6 @@ CREATE TABLE site (
   address_street VARCHAR(255) NOT NULL,
   address_apt VARCHAR(255),
   address_city VARCHAR(255) NOT NULL,
-  address_state states NOT NULL,
   address_zip VARCHAR(5) NOT NULL,
   area_id INT REFERENCES area(area_id) ON DELETE CASCADE,
   active BOOLEAN NOT NULL,
