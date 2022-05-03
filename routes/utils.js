@@ -117,6 +117,17 @@ FROM student
         ON site.site_id = student_group.site_id
 WHERE site.site_id = $1;`;
 
+// used in area (delete) and students (getByArea)
+const getStudentsByAreaQuery = `SELECT student.*
+FROM student
+  INNER JOIN (SELECT s.group_id, s.site_id
+        FROM student_group AS s) AS student_group
+        ON student_group.group_id = student.student_group_id
+  INNER JOIN (SELECT site.site_id, site.area_id
+        FROM site) AS site
+        ON site.site_id = student_group.site_id
+WHERE site.area_id = $1;`;
+
 module.exports = {
   isArray,
   isNumeric,
@@ -129,4 +140,5 @@ module.exports = {
   addContact,
   isNanoId,
   getStudentsBySiteQuery,
+  getStudentsByAreaQuery,
 };
