@@ -35,14 +35,14 @@ router.get('/', async (req, res) => {
 // create an admin
 router.post('/', async (req, res) => {
   try {
-    const { firebaseId, firstName, lastName, phoneNumber, email, inviteId } = req.body;
+    const { firebaseId, firstName, lastName, phoneNumber, email, inviteId, notes } = req.body;
     isAlphaNumeric(firebaseId, 'Firebase ID must be AlphaNumeric');
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
     isNanoId(inviteId, 'Invalid Invite Id Format');
     const newAdmin = await pool.query(
       `INSERT INTO tlp_user
-      (firebase_id, first_name, last_name, phone_number, email, position, active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      (firebase_id, first_name, last_name, phone_number, email, position, active, notes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *;`,
       [
         firebaseId,
@@ -52,6 +52,7 @@ router.post('/', async (req, res) => {
         email,
         'admin',
         'active', // verified by default since it was through invite
+        notes,
       ],
     );
 
@@ -69,14 +70,23 @@ router.put('/:adminId', async (req, res) => {
   try {
     const { adminId } = req.params;
     isNumeric(adminId, 'Admin Id must be a Number');
-    const { firstName, lastName, phoneNumber, active } = req.body;
+    const { firstName, lastName, phoneNumber, active, notes } = req.body;
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
-    await pool.query(
-      `UPDATE tlp_user
+    if (notes === undefined || notes === null) {
+      await pool.query(
+        `UPDATE tlp_user
       SET first_name = $1, last_name = $2, phone_number = $3, active = $4
       WHERE user_id = $5`,
-      [firstName, lastName, phoneNumber, active, adminId],
-    );
+        [firstName, lastName, phoneNumber, active, adminId],
+      );
+    } else {
+      await pool.query(
+        `UPDATE tlp_user
+      SET first_name = $1, last_name = $2, phone_number = $3, active = $4, notes = $5
+      WHERE user_id = $6`,
+        [firstName, lastName, phoneNumber, active, notes, adminId],
+      );
+    }
     const updatedAdmin = await pool.query(getAdmins(false), [adminId]);
     res.status(200).send(keysToCamel(updatedAdmin.rows[0]));
   } catch (err) {
