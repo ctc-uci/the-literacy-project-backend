@@ -8,7 +8,9 @@ const router = Router();
 // This gets all invites from the invite table
 router.get('/invite', async (req, res) => {
   try {
-    const invites = await pool.query('SELECT * FROM invites;');
+    const invites = await pool.query(
+      'SELECT * FROM invites WHERE valid_invite = true AND NOW() < expire_time;',
+    );
     res.status(200).json(keysToCamel(invites.rows));
   } catch (err) {
     res.status(400).send(err.message);

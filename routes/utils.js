@@ -50,7 +50,7 @@ const isArray = (a) => {
 };
 
 const isObject = (o) => {
-  return o === Object(o) && !isArray(o) && typeof o !== 'function';
+  return o === Object(o) && !isArray(o) && typeof o !== 'function' && !(o instanceof Date);
 };
 
 // Database columns are in snake case. JavaScript is suppose to be in camel case

@@ -8,9 +8,16 @@ const router = Router();
 const getTeachers = (allTeachers) =>
   `SELECT tlp_user.*, relation.sites
   FROM tlp_user
-    LEFT JOIN (SELECT m.user_id, array_agg(m.site_id ORDER BY m.site_id ASC) AS sites
-      FROM master_teacher_site_relation AS m
-      GROUP BY m.user_id) AS relation ON relation.user_id = tlp_user.user_id
+    LEFT JOIN (SELECT m.user_id,
+                      array_agg(json_build_object('site_id', m.site_id,
+                                                  'site_name', m.site_name)
+                      ORDER BY m.site_id ASC) AS sites
+    FROM (SELECT user_id, m.site_id, site_name
+          FROM master_teacher_site_relation AS m
+          JOIN site AS s
+          ON m.site_id = s.site_id) AS m
+      GROUP BY m.user_id) AS relation
+    ON relation.user_id = tlp_user.user_id
   WHERE ${allTeachers ? '' : 'tlp_user.user_id = $1 AND'} position = 'master teacher'`;
 
 // get a teacher by id
