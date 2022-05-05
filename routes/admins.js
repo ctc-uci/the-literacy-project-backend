@@ -72,21 +72,12 @@ router.put('/:adminId', async (req, res) => {
     isNumeric(adminId, 'Admin Id must be a Number');
     const { firstName, lastName, phoneNumber, active, notes } = req.body;
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
-    if (notes === undefined || notes === null) {
-      await pool.query(
-        `UPDATE tlp_user
-      SET first_name = $1, last_name = $2, phone_number = $3, active = $4
-      WHERE user_id = $5`,
-        [firstName, lastName, phoneNumber, active, adminId],
-      );
-    } else {
-      await pool.query(
-        `UPDATE tlp_user
-      SET first_name = $1, last_name = $2, phone_number = $3, active = $4, notes = $5
-      WHERE user_id = $6`,
-        [firstName, lastName, phoneNumber, active, notes, adminId],
-      );
-    }
+    await pool.query(
+      `UPDATE tlp_user
+    SET first_name = $1, last_name = $2, phone_number = $3, active = $4, notes = $5
+    WHERE user_id = $6`,
+      [firstName, lastName, phoneNumber, active, notes, adminId],
+    );
     const updatedAdmin = await pool.query(getAdmins(false), [adminId]);
     res.status(200).send(keysToCamel(updatedAdmin.rows[0]));
   } catch (err) {
