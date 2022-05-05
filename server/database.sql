@@ -10,7 +10,7 @@ CREATE TYPE user_status AS ENUM('active', 'inactive', 'pending');
 CREATE TYPE ethnicities AS ENUM('white', 'black', 'asian', 'latinx', 'american indian or alaska native', 'non-specified');
 CREATE TYPE weekday AS ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
 CREATE TYPE genders AS ENUM('male', 'female', 'non-specified');
-CREATE TYPE states AS ENUM('Alabama','Alaska', 'Arizona', 'Arkansas', 'California','Colorado', 'Connecticut', 'Delaware',
+CREATE TYPE states AS ENUM('Alabama','Alaska', 'Arizona', 'Arkansas', 'California','Colorado', 'Connecticut', 'Delaware', 'District of Columbia'
 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine',
 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania',
@@ -54,7 +54,8 @@ DROP TABLE area CASCADE;
 CREATE TABLE area (
   area_id SERIAL PRIMARY KEY,
   area_name VARCHAR(255) UNIQUE NOT NULL,
-  active BOOLEAN NOT NULL
+  active BOOLEAN NOT NULL,
+  area_state states NOT NULL
 );
 
 DROP TABLE site CASCADE;
@@ -64,9 +65,8 @@ CREATE TABLE site (
   address_street VARCHAR(255) NOT NULL,
   address_apt VARCHAR(255),
   address_city VARCHAR(255) NOT NULL,
-  address_state states NOT NULL,
   address_zip VARCHAR(5) NOT NULL,
-  area_id INT REFERENCES area(area_id) ON DELETE SET NULL NOT NULL,
+  area_id INT REFERENCES area(area_id) ON DELETE CASCADE,
   active BOOLEAN NOT NULL,
   notes VARCHAR(255),
   primary_contact_first_name VARCHAR(255) NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE site (
   second_contact_last_name VARCHAR(255),
   second_contact_title VARCHAR(255),
   second_contact_email VARCHAR(255),
-  second_contact_phone_number VARCHAR(15)
+  second_contact_phone VARCHAR(15)
 );
 
 DROP TABLE student_group CASCADE;
