@@ -118,7 +118,8 @@ router.put('/:areaId', async (req, res) => {
 });
 
 // delete an area
-// *deletes corresponding sites*
+// *deletes corresponding students in the area*
+// corresponding sites and student groups gets auto deleted in the db (on delete cascade)
 router.delete('/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;
