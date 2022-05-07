@@ -134,7 +134,7 @@ router.post('/add-site/:teacherId', async (req, res) => {
 });
 
 // remove site for teacher
-router.delete('/remove-site/:teacherId', async (req, res) => {
+router.put('/remove-site/:teacherId', async (req, res) => {
   try {
     const { teacherId } = req.params;
     const { siteId } = req.body;
@@ -147,6 +147,16 @@ router.delete('/remove-site/:teacherId', async (req, res) => {
       RETURNING *`,
       [teacherId, siteId],
     );
+
+    // set the teacher id to be null for all student groups with this site
+    await pool.query(
+      `UPDATE student_group
+      SET master_teacher_id = null
+      WHERE master_teacher_id = $1 AND site_id = $2
+      RETURNING *`,
+      [teacherId, siteId],
+    );
+
     res.status(200).send(keysToCamel(removedSite.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
