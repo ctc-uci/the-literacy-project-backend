@@ -5,7 +5,7 @@ const { isNumeric, keysToCamel, getStudentsBySiteQuery, isArray } = require('./u
 const router = Router();
 
 const studentsQuery = (conditions = '') =>
-  `SELECT student.*, site.site_id, site.site_name, area.area_name,
+  `SELECT student.*, site.site_id, site.site_name, area.area_id, area.area_name,
     student_group.name AS student_group_name, student_group.year, student_group.cycle
   FROM student
     LEFT JOIN student_group on student_group.group_id = student.student_group_id
@@ -119,15 +119,18 @@ router.get('/area/:areaId', async (req, res) => {
     const { areaId } = req.params;
     isNumeric(areaId, 'Area Id must be a Number');
     const students = await pool.query(
-      `SELECT student.*
+      `SELECT student.*, area.area_id, area.area_name, site.site_name, site.site_id, student_group.group_id, student_group.name AS student_group_name
       FROM student
-        INNER JOIN (SELECT s.group_id, s.site_id
+        INNER JOIN (SELECT s.group_id, s.name, s.site_id
               FROM student_group AS s) AS student_group
               ON student_group.group_id = student.student_group_id
-        INNER JOIN (SELECT site.site_id, site.area_id
+        INNER JOIN (SELECT site.site_id, site.site_name, site.area_id
               FROM site) AS site
               ON site.site_id = student_group.site_id
-      WHERE site.area_id = $1;`,
+        INNER JOIN (SELECT area.area_id, area.area_name
+              FROM area) AS area
+              ON area.area_id = site.area_id
+      WHERE area.area_id = $1;`,
       [areaId],
     );
     res.status(200).json(keysToCamel(students.rows));
