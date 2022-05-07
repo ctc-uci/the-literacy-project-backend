@@ -49,22 +49,20 @@ router.get('/invite/:inviteId', async (req, res) => {
 // if given email has a current invite, existing invite is overwritten and new invite is added
 router.post('/new-invite', async (req, res) => {
   try {
-    const { inviteId, email, position, firstName, lastName, phoneNumber } = req.body;
+    const { inviteId, email, position, firstName, lastName, phoneNumber, notes } = req.body;
     isNanoId(inviteId, 'Invalid Invite Id Format');
     isPhoneNumber(phoneNumber, 'Invalid Phone Number');
-
     // do not allow user to create an account if there's an existing account
     // delete existing invite if it uses the same email
     const existingEmail = await pool.query(`SELECT * FROM tlp_user WHERE email = $1`, [email]);
     if (existingEmail.rows.length > 0) {
       throw new Error('There is already an existing account with that email.');
     }
-
     await pool.query(`DELETE FROM invites WHERE email = $1 RETURNING *;`, [email]);
 
     const invite = await pool.query(
-      `INSERT INTO invites VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '7 days', $7) RETURNING *;`,
-      [inviteId, email, position, firstName, lastName, phoneNumber, true],
+      `INSERT INTO invites VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '7 days', $7, $8) RETURNING *;`,
+      [inviteId, email, position, firstName, lastName, phoneNumber, true, notes],
     );
     res.status(200).send(keysToCamel(invite.rows[0]));
   } catch (err) {

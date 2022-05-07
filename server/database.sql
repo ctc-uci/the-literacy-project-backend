@@ -26,7 +26,8 @@ CREATE TABLE tlp_user (
   phone_number VARCHAR(15) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   position pos NOT NULL,
-  active user_status NOT NULL
+  active user_status NOT NULL,
+  notes text
 );
 
 DROP TABLE invites CASCADE;
@@ -38,7 +39,8 @@ CREATE TABLE invites (
   last_name VARCHAR(255) NOT NULL,
   phone_number VARCHAR(15) NOT NULL,
   expire_time timestamp without time zone NOT NULL,
-  valid_invite boolean NOT NULL
+  valid_invite boolean NOT NULL,
+  notes text
 );
 
 DROP TABLE master_teacher_site_relation CASCADE;
