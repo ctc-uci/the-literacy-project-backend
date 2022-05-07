@@ -11,7 +11,7 @@ const {
 const router = Router();
 
 const studentsQuery = (conditions = '') =>
-  `SELECT student.*, site.site_id, site.site_name, area.area_name,
+  `SELECT student.*, site.site_id, site.site_name, area.area_id, area.area_name,
     student_group.name AS student_group_name, student_group.year, student_group.cycle
   FROM student
     LEFT JOIN student_group on student_group.group_id = student.student_group_id

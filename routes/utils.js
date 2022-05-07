@@ -107,26 +107,32 @@ const addContact = async (contactInfo) => {
 };
 
 // used in sites (delete) and students (getBySites)
-const getStudentsBySiteQuery = `SELECT student.*
+const getStudentsBySiteQuery = `SELECT student.*, area.area_id, area.area_name, site.site_id, site.site_name, student_group.group_id, student_group.name AS student_group_name
 FROM student
-  INNER JOIN (SELECT s.group_id, s.site_id
+  INNER JOIN (SELECT s.group_id, s.name, s.site_id
         FROM student_group AS s) AS student_group
         ON student_group.group_id = student.student_group_id
-  INNER JOIN (SELECT site.site_id, site.area_id
+  INNER JOIN (SELECT site.site_id, site.site_name, site.area_id
         FROM site) AS site
         ON site.site_id = student_group.site_id
+  INNER JOIN (SELECT area.area_id, area.area_name
+        FROM area) AS area
+        ON area.area_id = site.area_id
 WHERE site.site_id = $1;`;
 
 // used in area (delete) and students (getByArea)
-const getStudentsByAreaQuery = `SELECT student.*
+const getStudentsByAreaQuery = `SELECT student.*, area.area_id, area.area_name, site.site_name, site.site_id, student_group.group_id, student_group.name AS student_group_name
 FROM student
-  INNER JOIN (SELECT s.group_id, s.site_id
+  INNER JOIN (SELECT s.group_id, s.name, s.site_id
         FROM student_group AS s) AS student_group
         ON student_group.group_id = student.student_group_id
-  INNER JOIN (SELECT site.site_id, site.area_id
+  INNER JOIN (SELECT site.site_id, site.site_name, site.area_id
         FROM site) AS site
         ON site.site_id = student_group.site_id
-WHERE site.area_id = $1;`;
+  INNER JOIN (SELECT area.area_id, area.area_name
+        FROM area) AS area
+        ON area.area_id = site.area_id
+WHERE area.area_id = $1;`;
 
 module.exports = {
   isArray,
