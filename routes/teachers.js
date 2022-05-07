@@ -170,6 +170,19 @@ router.delete('/:teacherId', async (req, res) => {
   }
 });
 
+router.post('/reset-password/:teacherId', async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    isNumeric(teacherId, 'Teacher Id must be a Number');
+    const { newPassword } = req.body;
+    const tlpUser = await pool.query(`SELECT * FROM tlp_user WHERE user_id = $1`, [teacherId]);
+    await firebaseAdmin.auth().updateUser(tlpUser.rows[0].firebase_id, { password: newPassword });
+    res.status(200).send(keysToCamel(tlpUser.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // get a teachers information and their site information
 router.get('/all/:userId', async (req, res) => {
   try {
