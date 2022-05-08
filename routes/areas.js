@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool } = require('../server/db');
-const { isBoolean, isNumeric, keysToCamel } = require('./utils');
+const { isBoolean, isNumeric, keysToCamel, getStudentsByAreaQuery } = require('./utils');
 
 const router = Router();
 
@@ -118,11 +118,26 @@ router.put('/:areaId', async (req, res) => {
 });
 
 // delete an area
-// *deletes corresponding sites*
+// *deletes corresponding students in the area*
+// corresponding sites and student groups gets auto deleted in the db (on delete cascade)
 router.delete('/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;
     isNumeric(areaId, 'Area Id must be a Number');
+
+    const studentsToDelete = await pool.query(getStudentsByAreaQuery, [areaId]).then((result) => {
+      return result;
+    });
+
+    // must delete students before area
+    // deleting area first would delete site and sg (by cascade) and students sg would be null but students wont be deleted
+    studentsToDelete.rows.forEach(async (student) => {
+      isNumeric(student.student_id, 'Student Id must be a Number');
+      await pool.query(`DELETE FROM student WHERE student_id = $1 RETURNING *;`, [
+        student.student_id,
+      ]);
+    });
+
     const deletedArea = await pool.query(`DELETE FROM area WHERE area_id = $1 RETURNING *;`, [
       areaId,
     ]);

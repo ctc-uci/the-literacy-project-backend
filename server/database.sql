@@ -46,7 +46,7 @@ CREATE TABLE invites (
 DROP TABLE master_teacher_site_relation CASCADE;
 CREATE TABLE master_teacher_site_relation (
   user_id INT REFERENCES tlp_user(user_id) ON DELETE CASCADE NOT NULL,
-  site_id INT REFERENCES site(site_id) ON DELETE CASCADE NOT NULL,
+  site_id INT REFERENCES site(site_id) UNIQUE ON DELETE CASCADE NOT NULL,
   UNIQUE (user_id, site_id)
 );
 

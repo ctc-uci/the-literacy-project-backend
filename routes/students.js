@@ -1,11 +1,17 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isNumeric, keysToCamel, getStudentsBySiteQuery, isArray } = require('./utils');
+const {
+  isNumeric,
+  keysToCamel,
+  getStudentsBySiteQuery,
+  isArray,
+  getStudentsByAreaQuery,
+} = require('./utils');
 
 const router = Router();
 
 const studentsQuery = (conditions = '') =>
-  `SELECT student.*, site.site_id, site.site_name, area.area_name,
+  `SELECT student.*, site.site_id, site.site_name, area.area_id, area.area_name,
     student_group.name AS student_group_name, student_group.year, student_group.cycle
   FROM student
     LEFT JOIN student_group on student_group.group_id = student.student_group_id
@@ -118,18 +124,7 @@ router.get('/area/:areaId', async (req, res) => {
   try {
     const { areaId } = req.params;
     isNumeric(areaId, 'Area Id must be a Number');
-    const students = await pool.query(
-      `SELECT student.*
-      FROM student
-        INNER JOIN (SELECT s.group_id, s.site_id
-              FROM student_group AS s) AS student_group
-              ON student_group.group_id = student.student_group_id
-        INNER JOIN (SELECT site.site_id, site.area_id
-              FROM site) AS site
-              ON site.site_id = student_group.site_id
-      WHERE site.area_id = $1;`,
-      [areaId],
-    );
+    const students = await pool.query(getStudentsByAreaQuery, [areaId]);
     res.status(200).json(keysToCamel(students.rows));
   } catch (err) {
     res.status(400).send(err.message);

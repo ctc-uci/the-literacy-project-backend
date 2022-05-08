@@ -115,6 +115,25 @@ router.put('/:teacherId', async (req, res) => {
   }
 });
 
+// update a teacher's note
+router.put('/update-notes/:teacherId', async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    isNumeric(teacherId, 'Teacher Id must be a Number');
+    const { notes } = req.body;
+    await pool.query(
+      `UPDATE tlp_user
+        SET notes = $1
+        WHERE user_id = $2`,
+      [notes, teacherId],
+    );
+    const updatedTeacher = await pool.query(getTeachers(false), [teacherId]);
+    res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // add site for teacher
 router.post('/add-site/:teacherId', async (req, res) => {
   try {
