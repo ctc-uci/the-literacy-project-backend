@@ -112,3 +112,32 @@ CREATE TABLE student (
   pretest_a_notes VARCHAR(255)[],
   posttest_a_notes VARCHAR(255)[]
 );
+
+CREATE OR REPLACE FUNCTION updateStudentGroupMT()
+	RETURNS TRIGGER
+	LANGUAGE PLPGSQL
+	AS
+$$
+BEGIN
+  if  (TG_OP = 'INSERT' OR TG_OP = 'UPDATE') then
+		UPDATE student_group
+		SET master_teacher_id = new.user_id
+		WHERE student_group.site_id = new.site_id;
+		RETURN NEW;
+	end if;
+	if  (TG_OP = 'DELETE') then
+		UPDATE student_group
+		SET master_teacher_id = null
+		WHERE student_group.site_id = old.site_id;
+		RETURN NEW;
+	end if;
+END;
+$$
+
+DROP TRIGGER IF EXISTS updateStudentGroupMTTrigger ON master_teacher_site_relation;
+CREATE TRIGGER updateStudentGroupMTTrigger
+	AFTER INSERT OR UPDATE OR DELETE
+	ON master_teacher_site_relation
+	FOR EACH ROW
+	EXECUTE PROCEDURE updateStudentGroupMT();
+
