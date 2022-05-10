@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { pool } = require('../server/db');
+const { pool, db } = require('../server/db');
 const { isAlphaNumeric, isNanoId, isPhoneNumber, keysToCamel } = require('./utils');
 const admin = require('../firebase');
 
@@ -47,18 +47,39 @@ router.get('/invite/:inviteId', async (req, res) => {
 // add a new invite into the invite table for the TLP user
 // if given email is already associated with an existing account, return an error
 // if given email has a current invite, existing invite is overwritten and new invite is added
+// if an old email was given, update the invite linked to that email instead
 router.post('/new-invite', async (req, res) => {
   try {
-    const { inviteId, email, position, firstName, lastName, phoneNumber, notes } = req.body;
+    const { inviteId, email, position, firstName, lastName, phoneNumber, notes, oldInviteId } =
+      req.body;
     isNanoId(inviteId, 'Invalid Invite Id Format');
-    isPhoneNumber(phoneNumber, 'Invalid Phone Number');
+    if (phoneNumber) {
+      isPhoneNumber(phoneNumber, 'Invalid Phone Number');
+    }
     // do not allow user to create an account if there's an existing account
     // delete existing invite if it uses the same email
     const existingEmail = await pool.query(`SELECT * FROM tlp_user WHERE email = $1`, [email]);
     if (existingEmail.rows.length > 0) {
       throw new Error('There is already an existing account with that email.');
     }
-    await pool.query(`DELETE FROM invites WHERE email = $1 RETURNING *;`, [email]);
+
+    // check to see if there is an existing valid invite with given email
+    const existingInvite = await pool.query(
+      `SELECT * FROM invites WHERE email = $1 AND expire_time > NOW()`,
+      [email],
+    );
+
+    if (existingInvite.rows.length > 0) {
+      throw new Error('There is already an existing pending invite with that email.');
+    }
+    // removes invite if given an old invite id to remove
+    // also removes an non-active invite with the given email
+    await db.query(
+      `DELETE FROM invites WHERE email = $(email)
+      ${oldInviteId ? 'OR invite_id = $(oldInviteId)' : ''}
+      RETURNING *;`,
+      { email, oldInviteId },
+    );
 
     const invite = await pool.query(
       `INSERT INTO invites VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '7 days', $7, $8) RETURNING *;`,

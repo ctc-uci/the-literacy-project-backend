@@ -115,6 +115,44 @@ router.put('/:teacherId', async (req, res) => {
   }
 });
 
+// update pending teacher's email in DB + firebase
+router.put('/update-invite/:teacherId', async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    isNumeric(teacherId, 'Teacher Id must be a Number');
+    const { email } = req.body;
+
+    // do not allow user to create an account if there's an existing account
+    // delete existing invite if it uses the same email
+    const existingEmail = await pool.query(`SELECT * FROM tlp_user WHERE email = $1`, [email]);
+    if (existingEmail.rows.length > 0) {
+      throw new Error('There is already an existing account with that email.');
+    }
+
+    // check to see if there is an existing valid invite with given email
+    const existingInvite = await pool.query(
+      `SELECT * FROM invites WHERE email = $1 AND expire_time > NOW()`,
+      [email],
+    );
+
+    if (existingInvite.rows.length > 0) {
+      throw new Error('There is already an existing pending invite with that email.');
+    }
+
+    await pool.query(
+      `UPDATE tlp_user
+        SET email = $1
+        WHERE user_id = $2`,
+      [email, teacherId],
+    );
+    const updatedTeacher = await pool.query(getTeachers(false), [teacherId]);
+    await firebaseAdmin.auth().updateUser(updatedTeacher.rows[0].firebase_id, { email });
+    res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // update a teacher's note
 router.put('/update-notes/:teacherId', async (req, res) => {
   try {
@@ -164,15 +202,6 @@ router.put('/remove-site/:teacherId', async (req, res) => {
     const removedSite = await pool.query(
       `DELETE FROM master_teacher_site_relation
       WHERE user_id = $1 AND site_id = $2
-      RETURNING *`,
-      [teacherId, siteId],
-    );
-
-    // set the teacher id to be null for all student groups with this site
-    await pool.query(
-      `UPDATE student_group
-      SET master_teacher_id = null
-      WHERE master_teacher_id = $1 AND site_id = $2
       RETURNING *`,
       [teacherId, siteId],
     );
