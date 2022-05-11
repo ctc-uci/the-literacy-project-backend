@@ -52,7 +52,8 @@ router.post('/new-invite', async (req, res) => {
   try {
     const { inviteId, email, position, firstName, lastName, phoneNumber, notes, oldInviteId } =
       req.body;
-    isNanoId(inviteId, 'Invalid Invite Id Format');
+    isNanoId(inviteId, 'Invalid Invite Id Format for Invite Id');
+    isNanoId(oldInviteId, 'Invalid Invite Id Format for Old Invite');
     if (phoneNumber) {
       isPhoneNumber(phoneNumber, 'Invalid Phone Number');
     }
@@ -63,15 +64,19 @@ router.post('/new-invite', async (req, res) => {
       throw new Error('There is already an existing account with that email.');
     }
 
-    // check to see if there is an existing valid invite with given email
-    const existingInvite = await pool.query(
-      `SELECT * FROM invites WHERE email = $1 AND expire_time > NOW()`,
-      [email],
-    );
-
-    if (existingInvite.rows.length > 0) {
-      throw new Error('There is already an existing pending invite with that email.');
+    // if the request is not changing an old invite, assume request wants to override
+    // any existing invite that overlap with given email
+    if (oldInviteId) {
+      // check to see if there is an existing valid invite with given email
+      const existingInvite = await pool.query(
+        `SELECT * FROM invites WHERE email = $1 AND expire_time > NOW()`,
+        [email],
+      );
+      if (existingInvite.rows.length > 0) {
+        throw new Error('There is already an existing pending invite with that email.');
+      }
     }
+
     // removes invite if given an old invite id to remove
     // also removes an non-active invite with the given email
     await db.query(
