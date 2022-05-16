@@ -121,9 +121,11 @@ FROM student
 WHERE site.site_id = $1;`;
 
 // used in area (delete) and students (getByArea)
-const getStudentsByAreaQuery = `SELECT student.*, area.area_id, area.area_name, site.site_name, site.site_id, student_group.group_id, student_group.name AS student_group_name
+const getStudentsByAreaQuery = `SELECT student.*, area.area_id, area.area_name,
+      site.site_name, site.site_id,
+      student_group.group_id, student_group.name AS student_group_name, student_group.year, student_group.cycle
 FROM student
-  INNER JOIN (SELECT s.group_id, s.name, s.site_id
+  INNER JOIN (SELECT s.group_id, s.name, s.site_id, s.year, s.cycle
         FROM student_group AS s) AS student_group
         ON student_group.group_id = student.student_group_id
   INNER JOIN (SELECT site.site_id, site.site_name, site.area_id
