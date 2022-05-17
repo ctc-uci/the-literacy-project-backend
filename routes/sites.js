@@ -196,7 +196,7 @@ router.put('/:siteId', async (req, res) => {
     if (areaId) {
       isNumeric(areaId, 'Area Id must be a Number');
     }
-    if (active) {
+    if (active !== undefined) {
       isBoolean(active, 'Active is not a boolean');
     }
     if (primaryContactInfo && primaryContactInfo.phone) {
