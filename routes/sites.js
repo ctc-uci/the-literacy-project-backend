@@ -14,7 +14,7 @@ const router = Router();
 const getSites = (allSites) =>
   `SELECT site.site_id, site.site_name,
   site.address_street, site.address_apt, site.address_city, area.area_state AS address_state,site.address_zip,
-  site.area_id, site.notes, site.active, area.area_name,
+  site.area_id, site.notes, site.active, area.area_name, years_and_cycles,
   to_json((SELECT s FROM (SELECT primary_contact_first_name AS "firstName",
 						  primary_contact_last_name AS "lastName",
 						  primary_contact_title AS "title",
@@ -26,8 +26,16 @@ const getSites = (allSites) =>
 						  second_contact_email AS "email",
 						  second_contact_phone AS "phone") AS s)) as "secondContactInfo"
   FROM site
+  LEFT JOIN
+    (SELECT site.site_id, array_agg(json_build_object('year', sg.year, 'cycle', sg.cycle)) as years_and_cycles
+    FROM student_group AS sg
+      INNER JOIN
+        (SELECT site.site_id, site.area_id FROM site)
+      AS site ON site.site_id=sg.site_id
+      GROUP BY site.site_id)
+    AS sg ON sg.site_id=site.site_id
   LEFT JOIN area on area.area_id = site.area_id
-  ${allSites ? '' : 'WHERE site_id = $1'}`;
+  ${allSites ? '' : 'WHERE site.site_id = $1'}`;
 
 const noMT = () =>
   `SELECT * FROM site
