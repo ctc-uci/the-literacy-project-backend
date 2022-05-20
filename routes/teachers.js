@@ -52,12 +52,10 @@ router.get('/site/:siteId', async (req, res) => {
   }
 });
 
-// create a teacher
+// create a teacher in firebase and in the backend
 router.post('/', async (req, res) => {
   try {
     const { firstName, lastName, email, notes, password, siteIds } = req.body;
-    // isAlphaNumeric(firebaseId, 'Firebase Id must be alphanumeric');
-    // isPhoneNumber(phoneNumber, 'Invalid Phone Number');
 
     const newUser = await firebaseAdmin.auth().createUser({
       email,
@@ -68,10 +66,10 @@ router.post('/', async (req, res) => {
     const newTeacher = await pool.query(
       `INSERT INTO tlp_user
         (firebase_id, first_name, last_name,
-        phone_number, email, position, active, notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        email, position, active, notes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
-      [newUser.uid, firstName, lastName, 1234567890, email, 'master teacher', 'pending', notes],
+      [newUser.uid, firstName, lastName, email, 'master teacher', 'pending', notes],
     );
     const userId = newTeacher.rows[0].user_id;
     if (siteIds.length > 0) {
