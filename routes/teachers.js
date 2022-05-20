@@ -8,9 +8,16 @@ const router = Router();
 const getTeachers = (allTeachers) =>
   `SELECT tlp_user.*, relation.sites
   FROM tlp_user
-    LEFT JOIN (SELECT m.user_id, array_agg(m.site_id ORDER BY m.site_id ASC) AS sites
-      FROM master_teacher_site_relation AS m
-      GROUP BY m.user_id) AS relation ON relation.user_id = tlp_user.user_id
+    LEFT JOIN (SELECT m.user_id,
+                      array_agg(json_build_object('site_id', m.site_id,
+                                                  'site_name', m.site_name)
+                      ORDER BY m.site_id ASC) AS sites
+    FROM (SELECT user_id, m.site_id, site_name
+          FROM master_teacher_site_relation AS m
+          JOIN site AS s
+          ON m.site_id = s.site_id) AS m
+      GROUP BY m.user_id) AS relation
+    ON relation.user_id = tlp_user.user_id
   WHERE ${allTeachers ? '' : 'tlp_user.user_id = $1 AND'} position = 'master teacher'`;
 
 // get a teacher by id
@@ -108,6 +115,44 @@ router.put('/:teacherId', async (req, res) => {
   }
 });
 
+// update pending teacher's email in DB + firebase
+router.put('/update-invite/:teacherId', async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    isNumeric(teacherId, 'Teacher Id must be a Number');
+    const { email } = req.body;
+
+    // do not allow user to create an account if there's an existing account
+    // delete existing invite if it uses the same email
+    const existingEmail = await pool.query(`SELECT * FROM tlp_user WHERE email = $1`, [email]);
+    if (existingEmail.rows.length > 0) {
+      throw new Error('There is already an existing account with that email.');
+    }
+
+    // check to see if there is an existing valid invite with given email
+    const existingInvite = await pool.query(
+      `SELECT * FROM invites WHERE email = $1 AND expire_time > NOW()`,
+      [email],
+    );
+
+    if (existingInvite.rows.length > 0) {
+      throw new Error('There is already an existing pending invite with that email.');
+    }
+
+    await pool.query(
+      `UPDATE tlp_user
+        SET email = $1
+        WHERE user_id = $2`,
+      [email, teacherId],
+    );
+    const updatedTeacher = await pool.query(getTeachers(false), [teacherId]);
+    await firebaseAdmin.auth().updateUser(updatedTeacher.rows[0].firebase_id, { email });
+    res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // update a teacher's note
 router.put('/update-notes/:teacherId', async (req, res) => {
   try {
@@ -147,7 +192,7 @@ router.post('/add-site/:teacherId', async (req, res) => {
 });
 
 // remove site for teacher
-router.delete('/remove-site/:teacherId', async (req, res) => {
+router.put('/remove-site/:teacherId', async (req, res) => {
   try {
     const { teacherId } = req.params;
     const { siteId } = req.body;
@@ -160,6 +205,7 @@ router.delete('/remove-site/:teacherId', async (req, res) => {
       RETURNING *`,
       [teacherId, siteId],
     );
+
     res.status(200).send(keysToCamel(removedSite.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -178,6 +224,19 @@ router.delete('/:teacherId', async (req, res) => {
       [teacherId],
     );
     res.status(200).send(keysToCamel(deletedTeacher.rows[0]));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+router.post('/reset-password/:teacherId', async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    isNumeric(teacherId, 'Teacher Id must be a Number');
+    const { newPassword } = req.body;
+    const tlpUser = await pool.query(`SELECT * FROM tlp_user WHERE user_id = $1`, [teacherId]);
+    await firebaseAdmin.auth().updateUser(tlpUser.rows[0].firebase_id, { password: newPassword });
+    res.status(200).send(keysToCamel(tlpUser.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
   }
