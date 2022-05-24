@@ -82,6 +82,27 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/area/:year/:cycle', async (req, res) => {
+  try {
+    const { year, cycle } = req.params;
+    console.log(year, cycle);
+    // missing FROM-clause entry for table "student_group"
+    isNumeric(year, 'year must be a Number');
+    const sites = await pool.query(`${getSites(true)} WHERE student_group.year = $1`, [year]);
+    res
+      .status(200)
+      .json(
+        keysToCamel(
+          sites.rows.map((s) =>
+            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          ),
+        ),
+      );
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // get all sites in an area
 router.get('/area/:areaId', async (req, res) => {
   try {
