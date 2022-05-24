@@ -109,11 +109,11 @@ router.put('/:teacherId', async (req, res) => {
 
     await db.query(
       `UPDATE tlp_user
-        SET first_name = $1, last_name = $2, ${
-          phoneNumber ? 'phone_number = $3' : ''
-        }, active = $4, notes = $5
-        WHERE user_id = $6`,
-      [firstName, lastName, phoneNumber, active, notes, teacherId],
+        SET first_name = $(firstName), last_name = $(lastName), ${
+          phoneNumber ? 'phone_number = $(phoneNumber)' : ''
+        }, active = $(active), notes = $(notes)
+        WHERE user_id = $(teacherId)`,
+      { firstName, lastName, phoneNumber, active, notes, teacherId },
     );
     const updatedTeacher = await pool.query(getTeachers(false), [teacherId]);
     res.status(200).send(keysToCamel(updatedTeacher.rows[0]));
