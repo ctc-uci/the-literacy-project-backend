@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool, db } = require('../server/db');
-const { isAlphaNumeric, isNanoId, isPhoneNumber, keysToCamel } = require('./utils');
+const { isAlphaNumeric, isNumeric, isNanoId, isPhoneNumber, keysToCamel } = require('./utils');
 const admin = require('../firebase');
 
 const router = Router();
@@ -17,13 +17,38 @@ router.get('/invite', async (req, res) => {
   }
 });
 
-// get a TLP user (DB Id, position, active) by their firebase ID
+// get a TLP user by their firebase ID
+// master teachers objects also include the number of sites they are in
 router.get('/:firebaseId', async (req, res) => {
   try {
     const { firebaseId } = req.params;
     isAlphaNumeric(firebaseId, 'Firebase Id must be AlphaNumeric');
     const user = await pool.query(`SELECT * FROM tlp_user WHERE firebase_id = $1;`, [firebaseId]);
-    res.status(200).send(keysToCamel(user.rows[0]));
+    const userData = user.rows[0];
+    if (userData.position === 'master teacher') {
+      const numSites = await pool.query(
+        `SELECT COUNT(site_id) AS count FROM master_teacher_site_relation WHERE user_id = $1;`,
+        [userData.user_id],
+      );
+      userData.num_sites = numSites.rows[0].count;
+    }
+    res.status(200).send(keysToCamel(userData));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+router.post('/set-active/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    isNumeric(userId, 'User ID must be a number');
+    const user = await pool.query(
+      `UPDATE tlp_user
+      SET active = 'active'
+      WHERE user_id = $1;`,
+      [userId],
+    );
+    res.status(200).send(keysToCamel(user));
   } catch (err) {
     res.status(400).send(err.message);
   }

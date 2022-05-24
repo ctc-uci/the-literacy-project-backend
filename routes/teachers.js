@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { pool } = require('../server/db');
-const { isNumeric, isAlphaNumeric, isPhoneNumber, isNanoId, keysToCamel } = require('./utils');
+const { isNumeric, isPhoneNumber, keysToCamel } = require('./utils');
 const firebaseAdmin = require('../firebase');
 
 const router = Router();
@@ -59,36 +59,38 @@ router.get('/site/:siteId', async (req, res) => {
   }
 });
 
-// create a teacher
+// create a teacher in firebase and in the backend
 router.post('/', async (req, res) => {
   try {
-    const { firebaseId, firstName, lastName, phoneNumber, email, inviteId, notes } = req.body;
-    isAlphaNumeric(firebaseId, 'Firebase Id must be alphanumeric');
-    isPhoneNumber(phoneNumber, 'Invalid Phone Number');
-    isNanoId(inviteId, 'Invalid Invite Id Format');
+    const { firstName, lastName, email, notes, password, siteIds } = req.body;
+
+    const newUser = await firebaseAdmin.auth().createUser({
+      email,
+      emailVerified: true,
+      password,
+    });
 
     const newTeacher = await pool.query(
       `INSERT INTO tlp_user
         (firebase_id, first_name, last_name,
-        phone_number, email, position, active, notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        email, position, active, notes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
-      [
-        firebaseId,
-        firstName,
-        lastName,
-        phoneNumber,
-        email,
-        'master teacher',
-        'active', // verified by default since it was through invite
-        notes,
-      ],
+      [newUser.uid, firstName, lastName, email, 'master teacher', 'pending', notes],
     );
+    const userId = newTeacher.rows[0].user_id;
+    if (siteIds.length > 0) {
+      await pool.query(
+        `INSERT INTO master_teacher_site_relation
+          (user_id, site_id)
+        VALUES
+        ${siteIds.map((s) => `($1, ${s})`).join(', ')}
+        RETURNING *;`,
+        [userId],
+      );
+    }
 
-    // remove used invite from invites table
-    await pool.query(`DELETE FROM invites WHERE invite_id = $1 RETURNING *;`, [inviteId]);
-
-    const addedTeacher = await pool.query(getTeachers(false), [newTeacher.rows[0].user_id]);
+    const addedTeacher = await pool.query(getTeachers(false), [userId]);
     res.status(200).send(keysToCamel(addedTeacher.rows[0]));
   } catch (err) {
     res.status(400).send(err.message);
@@ -101,7 +103,10 @@ router.put('/:teacherId', async (req, res) => {
     const { teacherId } = req.params;
     isNumeric(teacherId, 'Teacher Id must be a Number');
     const { firstName, lastName, phoneNumber, active, notes } = req.body;
-    isPhoneNumber(phoneNumber, 'Invalid Phone Number');
+    if (phoneNumber != null) {
+      isPhoneNumber(phoneNumber, 'Invalid Phone Number');
+    }
+
     await pool.query(
       `UPDATE tlp_user
         SET first_name = $1, last_name = $2, phone_number = $3, active = $4, notes = $5
