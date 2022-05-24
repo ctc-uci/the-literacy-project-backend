@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { pool, db } = require('../server/db');
+const { pool } = require('../server/db');
 const { isNumeric, isPhoneNumber, keysToCamel } = require('./utils');
 const firebaseAdmin = require('../firebase');
 
@@ -103,17 +103,15 @@ router.put('/:teacherId', async (req, res) => {
     const { teacherId } = req.params;
     isNumeric(teacherId, 'Teacher Id must be a Number');
     const { firstName, lastName, phoneNumber, active, notes } = req.body;
-    if (phoneNumber) {
+    if (phoneNumber != null) {
       isPhoneNumber(phoneNumber, 'Invalid Phone Number');
     }
 
-    await db.query(
+    await pool.query(
       `UPDATE tlp_user
-        SET first_name = $(firstName), last_name = $(lastName), ${
-          phoneNumber ? 'phone_number = $(phoneNumber)' : ''
-        }, active = $(active), notes = $(notes)
-        WHERE user_id = $(teacherId)`,
-      { firstName, lastName, phoneNumber, active, notes, teacherId },
+        SET first_name = $1, last_name = $2, phone_number = $3, active = $4, notes = $5
+        WHERE user_id = $6`,
+      [firstName, lastName, phoneNumber, active, notes, teacherId],
     );
     const updatedTeacher = await pool.query(getTeachers(false), [teacherId]);
     res.status(200).send(keysToCamel(updatedTeacher.rows[0]));

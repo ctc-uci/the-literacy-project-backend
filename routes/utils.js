@@ -33,7 +33,7 @@ const isNanoId = (value, errorMessage) => {
 };
 
 const isPhoneNumber = (value, errorMessage) => {
-  if (!/^\d+$/.test(value) || value.length > 15) {
+  if (value !== '' && (!/^\d+$/.test(value) || value.length > 15)) {
     throw new Error(errorMessage);
   }
 };
