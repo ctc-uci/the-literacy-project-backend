@@ -225,7 +225,6 @@ router.get('/people/filter', async (req, res) => {
           }`,
         ].join(' AND ')})`,
       );
-      console.log(q);
       students = await pool.query(q);
     } else {
       // This is based on the current filter in the /people route --> if any of the filters are not set --> no data will display
