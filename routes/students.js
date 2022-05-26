@@ -134,16 +134,23 @@ router.get('/area/:areaId', async (req, res) => {
 // get all students demographic percentages based on filters
 router.get('/people/filter', async (req, res) => {
   try {
-    const requestBody = req.body;
+    const requestQuery = req.query;
+    // console.log(req);
+    // console.log(requestQuery);
     const conditionsNullCheck = {
       states: '',
       areas: '',
       sites: '',
       years: '',
     };
+    if (!requestQuery.states) requestQuery.states = [];
+    if (!requestQuery.areas) requestQuery.areas = [];
+    if (!requestQuery.grades) requestQuery.grades = [];
+    if (!requestQuery.sites) requestQuery.sites = [];
+    if (!requestQuery.years) requestQuery.years = [];
 
     // Get all state conditions
-    const conditionsStates = `(${requestBody.filters.states
+    const conditionsStates = `(${requestQuery.states
       .filter((state) => {
         return state !== 'N/A';
       })
@@ -151,18 +158,18 @@ router.get('/people/filter', async (req, res) => {
         return `'${state}'`;
       })
       .join(', ')})`;
-    if (requestBody.filters.states.includes('N/A')) {
+    if (requestQuery.states.includes('N/A')) {
       conditionsNullCheck.states = 'area.area_state IS NULL';
     }
 
     // Get all grades conditions
-    const conditionsGrades = `(${requestBody.filters.grades
+    const conditionsGrades = `(${requestQuery.grades
       .map((grade) => {
         return `${grade}`;
       })
       .join(', ')})`;
 
-    const conditionsAreas = `(${requestBody.filters.areas
+    const conditionsAreas = `(${requestQuery.areas
       .filter((areas) => {
         return areas !== 'No assigned area';
       })
@@ -170,12 +177,12 @@ router.get('/people/filter', async (req, res) => {
         return `'${areas}'`;
       })
       .join(', ')})`;
-    if (requestBody.filters.areas.includes('No assigned area')) {
+    if (requestQuery.areas.includes('No assigned area')) {
       conditionsNullCheck.areas = 'area.area_name IS NULL';
     }
 
     // Get all site conditions
-    const conditionsSites = `(${requestBody.filters.sites
+    const conditionsSites = `(${requestQuery.sites
       .filter((site) => {
         return site !== 'No assigned site';
       })
@@ -183,12 +190,12 @@ router.get('/people/filter', async (req, res) => {
         return `'${site.split("'").join("''")}'`;
       })
       .join(', ')})`;
-    if (requestBody.filters.sites.includes('No assigned site')) {
+    if (requestQuery.sites.includes('No assigned site')) {
       conditionsNullCheck.sites = 'site.site_name IS NULL';
     }
 
     // Get all cycle conditions
-    const conditionsYears = `(${requestBody.filters.years
+    const conditionsYears = `(${requestQuery.years
       .filter((year) => {
         return year !== 'N/A';
       })
@@ -196,17 +203,17 @@ router.get('/people/filter', async (req, res) => {
         return `${year}`;
       })
       .join(', ')})`;
-    if (requestBody.filters.years.includes('N/A')) {
+    if (requestQuery.years.includes('N/A')) {
       conditionsNullCheck.years = 'student_group.year IS NULL';
     }
 
     let students = [];
     if (
-      conditionsStates !== '' &&
-      conditionsAreas !== '' &&
-      conditionsGrades !== '' &&
-      conditionsSites !== '' &&
-      conditionsYears !== ''
+      conditionsStates !== '()' &&
+      conditionsAreas !== '()' &&
+      conditionsGrades !== '()' &&
+      conditionsSites !== '()' &&
+      conditionsYears !== '()'
     ) {
       const q = studentsQuery(
         `WHERE (${[
