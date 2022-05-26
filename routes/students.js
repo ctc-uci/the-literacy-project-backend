@@ -135,96 +135,101 @@ router.get('/area/:areaId', async (req, res) => {
 router.get('/people/filter', async (req, res) => {
   try {
     const requestBody = req.body;
-    const conditionsNullList = [];
+    const conditionsNullCheck = {
+      states: '',
+      areas: '',
+      sites: '',
+      years: '',
+    };
 
     // Get all state conditions
-    const conditionsStates = requestBody.filters.states
+    const conditionsStates = `(${requestBody.filters.states
       .filter((state) => {
         return state !== 'N/A';
       })
       .map((state) => {
-        return `area.area_state = '${state}'`;
+        return `'${state}'`;
       })
-      .join(' OR ');
-    if (!requestBody.filters.states.includes('N/A')) {
-      conditionsNullList.push('area.area_state IS NOT NULL');
+      .join(', ')})`;
+    if (requestBody.filters.states.includes('N/A')) {
+      conditionsNullCheck.states = 'area.area_state IS NULL';
     }
 
     // Get all grades conditions
-    const conditionsGrades = requestBody.filters.grades
+    const conditionsGrades = `(${requestBody.filters.grades
       .map((grade) => {
-        return `student.grade = ${grade}`;
+        return `${grade}`;
       })
-      .join(' OR ');
+      .join(', ')})`;
 
-    // Get all area conditions
-    const conditionsAreas = requestBody.filters.areas
-      .filter((area) => {
-        return area !== 'N/A';
+    const conditionsAreas = `(${requestBody.filters.areas
+      .filter((areas) => {
+        return areas !== 'N/A';
       })
-      .map((area) => {
-        return `area.area_name = '${area}'`;
+      .map((areas) => {
+        return `'${areas}'`;
       })
-      .join(' OR ');
-    if (!requestBody.filters.areas.includes('N/A')) {
-      conditionsNullList.push('area.area_name IS NOT NULL');
+      .join(', ')})`;
+    if (requestBody.filters.areas.includes('N/A')) {
+      conditionsNullCheck.areas = 'area.area_name IS NULL';
     }
 
     // Get all site conditions
-    const conditionsSites = requestBody.filters.sites
+    const conditionsSites = `(${requestBody.filters.sites
       .filter((site) => {
         return site !== 'N/A';
       })
       .map((site) => {
-        return `site.site_name = '${site}'`;
+        return `'${site.split("'").join("''")}'`;
       })
-      .join(' OR ');
-    if (!requestBody.filters.sites.includes('N/A')) {
-      conditionsNullList.push('site.site_name IS NOT NULL');
+      .join(', ')})`;
+    if (requestBody.filters.sites.includes('N/A')) {
+      conditionsNullCheck.sites = 'site.site_name IS NULL';
     }
 
     // Get all cycle conditions
-    const conditionsYears = requestBody.filters.years
+    const conditionsYears = `(${requestBody.filters.years
       .filter((cycle) => {
         return cycle !== 'N/A';
       })
       .map((cycle) => {
-        return `student_group.cycle = '${cycle}'::cycles`;
+        return `'${cycle}'::cycles`;
       })
-      .join(' OR ');
-    if (!requestBody.filters.years.includes('N/A')) {
-      conditionsNullList.push('student_group.cycle IS NOT NULL');
+      .join(', ')})`;
+    if (requestBody.filters.years.includes('N/A')) {
+      conditionsNullCheck.years = 'student_group.cycle IS NULL';
     }
 
     let students = [];
     if (
-      conditionsStates !== '' ||
-      conditionsAreas !== '' ||
-      conditionsGrades !== '' ||
-      conditionsSites !== '' ||
+      conditionsStates !== '' &&
+      conditionsAreas !== '' &&
+      conditionsGrades !== '' &&
+      conditionsSites !== '' &&
       conditionsYears !== ''
     ) {
       const q = studentsQuery(
         `WHERE (${[
-          conditionsStates,
-          conditionsAreas,
-          conditionsGrades,
-          conditionsSites,
-          conditionsYears,
-        ]
-          .filter((condition) => {
-            return condition !== '';
-          })
-          .join(' OR ')})${
-          conditionsNullList.length > 0 ? ` AND (${conditionsNullList.join(' AND ')})` : ''
-        }`,
+          `(area.area_state IN ${conditionsStates}${
+            conditionsNullCheck.states !== '' ? ` OR ${conditionsNullCheck.states})` : ')'
+          }`,
+          `(area.area_name IN ${conditionsAreas}${
+            conditionsNullCheck.areas !== '' ? ` OR ${conditionsNullCheck.areas})` : ')'
+          }`,
+          `(student.grade IN ${conditionsGrades})`,
+          `(site.site_name IN ${conditionsSites}${
+            conditionsNullCheck.sites !== '' ? ` OR ${conditionsNullCheck.sites})` : ')'
+          }`,
+          `(student_group.cycle IN ${conditionsYears}${
+            conditionsNullCheck.states !== '' ? ` OR ${conditionsNullCheck.states})` : ')'
+          }`,
+        ].join(' AND ')})`,
       );
+      console.log(q);
       students = await pool.query(q);
     } else {
-      const q = studentsQuery(
-        conditionsNullList.length > 0 ? `WHERE (${conditionsNullList.join(' AND ')})` : '',
-      );
-      students = await pool.query(q);
+      // This is based on the current filter in the /people route --> if any of the filters are not set --> no data will display
+      students = { rows: [] };
     }
 
     // Get percentages for the grade of filtered students
