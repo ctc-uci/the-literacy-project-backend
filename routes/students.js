@@ -279,9 +279,9 @@ router.get('/people/filter', async (req, res) => {
 
     // Response object
     const response = {
-      gradePercentage,
-      ethnicityPercentage,
-      genderPercentage,
+      Grade: gradePercentage,
+      Ethnicity: ethnicityPercentage,
+      Gender: genderPercentage,
     };
 
     res.status(200).json(keysToCamel(response));
