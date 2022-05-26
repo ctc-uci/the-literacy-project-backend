@@ -164,26 +164,26 @@ router.get('/people/filter', async (req, res) => {
 
     const conditionsAreas = `(${requestBody.filters.areas
       .filter((areas) => {
-        return areas !== 'N/A';
+        return areas !== 'No assigned area';
       })
       .map((areas) => {
         return `'${areas}'`;
       })
       .join(', ')})`;
-    if (requestBody.filters.areas.includes('N/A')) {
+    if (requestBody.filters.areas.includes('No assigned area')) {
       conditionsNullCheck.areas = 'area.area_name IS NULL';
     }
 
     // Get all site conditions
     const conditionsSites = `(${requestBody.filters.sites
       .filter((site) => {
-        return site !== 'N/A';
+        return site !== 'No assigned site';
       })
       .map((site) => {
         return `'${site.split("'").join("''")}'`;
       })
       .join(', ')})`;
-    if (requestBody.filters.sites.includes('N/A')) {
+    if (requestBody.filters.sites.includes('No assigned site')) {
       conditionsNullCheck.sites = 'site.site_name IS NULL';
     }
 
