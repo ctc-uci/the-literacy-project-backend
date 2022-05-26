@@ -189,15 +189,15 @@ router.get('/people/filter', async (req, res) => {
 
     // Get all cycle conditions
     const conditionsYears = `(${requestBody.filters.years
-      .filter((cycle) => {
-        return cycle !== 'N/A';
+      .filter((year) => {
+        return year !== 'N/A';
       })
-      .map((cycle) => {
-        return `'${cycle}'::cycles`;
+      .map((year) => {
+        return `${year}`;
       })
       .join(', ')})`;
     if (requestBody.filters.years.includes('N/A')) {
-      conditionsNullCheck.years = 'student_group.cycle IS NULL';
+      conditionsNullCheck.years = 'student_group.year IS NULL';
     }
 
     let students = [];
@@ -220,8 +220,8 @@ router.get('/people/filter', async (req, res) => {
           `(site.site_name IN ${conditionsSites}${
             conditionsNullCheck.sites !== '' ? ` OR ${conditionsNullCheck.sites})` : ')'
           }`,
-          `(student_group.cycle IN ${conditionsYears}${
-            conditionsNullCheck.states !== '' ? ` OR ${conditionsNullCheck.states})` : ')'
+          `(student_group.year IN ${conditionsYears}${
+            conditionsNullCheck.years !== '' ? ` OR ${conditionsNullCheck.years})` : ')'
           }`,
         ].join(' AND ')})`,
       );
