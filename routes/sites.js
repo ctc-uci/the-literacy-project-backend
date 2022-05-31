@@ -42,6 +42,22 @@ const noMT = () =>
     WHERE site_id NOT IN
     (SELECT site_id FROM master_teacher_site_relation)`;
 
+const containsYearAndOrCycle = (s, y, c) => {
+  let sites = s;
+  if (sites === null) {
+    return [];
+  }
+  if (y !== 'all') {
+    isNumeric(y);
+    sites = sites.filter((o) => o.year.toString() === y);
+  }
+  if (c !== 'all') {
+    isNumeric(c);
+    sites = sites.filter((o) => o.cycle.toString() === c);
+  }
+  return sites;
+};
+
 // get sites without master teacher
 router.get('/no-master-teacher', async (req, res) => {
   try {
@@ -82,13 +98,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/area/:year/:cycle', async (req, res) => {
+// get all sites in an area
+router.get('/area/:areaId', async (req, res) => {
   try {
-    const { year, cycle } = req.params;
-    console.log(year, cycle);
-    // missing FROM-clause entry for table "student_group"
-    isNumeric(year, 'year must be a Number');
-    const sites = await pool.query(`${getSites(true)} WHERE student_group.year = $1`, [year]);
+    const { areaId } = req.params;
+    isNumeric(areaId, 'Area Id must be a Number');
+    const sites = await pool.query(`${getSites(true)} WHERE site.area_id = $1`, [areaId]);
     res
       .status(200)
       .json(
@@ -103,12 +118,14 @@ router.get('/area/:year/:cycle', async (req, res) => {
   }
 });
 
-// get all sites in an area
-router.get('/area/:areaId', async (req, res) => {
+// get all sites in an area given year and or cycle
+router.get('/area/:year/:cycle', async (req, res) => {
   try {
-    const { areaId } = req.params;
-    isNumeric(areaId, 'Area Id must be a Number');
-    const sites = await pool.query(`${getSites(true)} WHERE site.area_id = $1`, [areaId]);
+    const sites = await pool.query(getSites(true));
+    const { year, cycle } = req.params;
+    sites.rows = sites.rows.filter(
+      (s) => containsYearAndOrCycle(s.years_and_cycles, year, cycle).length > 0,
+    );
     res
       .status(200)
       .json(
