@@ -42,6 +42,27 @@ const noMT = () =>
     WHERE site_id NOT IN
     (SELECT site_id FROM master_teacher_site_relation)`;
 
+const containsYearAndOrCycle = (s, y, c) => {
+  let sites = s;
+  // console.log(sites);  // this prints out the sites.rows beforehand
+  if (sites === null) {
+    return [];
+  }
+  if (y !== 'all') {
+    isNumeric(y);
+    sites = sites.filter((o) => o.year.toString() === y);
+    // console.log('filtering for year');
+    // console.log(sites);
+  }
+  if (c !== 'all') {
+    isNumeric(c);
+    sites = sites.filter((o) => o.cycle.toString() === c);
+    // console.log('filtering for cycle');
+    // console.log(sites);
+  }
+  return sites;
+};
+
 // get sites without master teacher
 router.get('/no-master-teacher', async (req, res) => {
   try {
@@ -88,6 +109,30 @@ router.get('/area/:areaId', async (req, res) => {
     const { areaId } = req.params;
     isNumeric(areaId, 'Area Id must be a Number');
     const sites = await pool.query(`${getSites(true)} WHERE site.area_id = $1`, [areaId]);
+    res
+      .status(200)
+      .json(
+        keysToCamel(
+          sites.rows.map((s) =>
+            s.secondContactInfo.firstName ? s : { ...s, secondContactInfo: null },
+          ),
+        ),
+      );
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+// get all sites in an area given year and or cycle
+router.get('/area/:areaId/:year/:cycle', async (req, res) => {
+  try {
+    // If you're interested more in what the function is doing, check above where I commented out a console.log statement
+    const { areaId, year, cycle } = req.params;
+    isNumeric(areaId, 'Area Id must be a Number');
+    const sites = await pool.query(`${getSites(true)} WHERE site.area_id = $1`, [areaId]);
+    sites.rows = sites.rows.filter(
+      (s) => containsYearAndOrCycle(s.years_and_cycles, year, cycle).length > 0,
+    );
     res
       .status(200)
       .json(
