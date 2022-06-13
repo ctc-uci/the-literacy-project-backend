@@ -131,6 +131,172 @@ router.get('/area/:areaId', async (req, res) => {
   }
 });
 
+// get all students demographic percentages based on filters
+router.get('/people/filter', async (req, res) => {
+  try {
+    const requestQuery = req.query;
+    // console.log(req);
+    // console.log(requestQuery);
+    const conditionsNullCheck = {
+      states: '',
+      areas: '',
+      sites: '',
+      years: '',
+    };
+    if (!requestQuery.states) requestQuery.states = [];
+    if (!requestQuery.areas) requestQuery.areas = [];
+    if (!requestQuery.grades) requestQuery.grades = [];
+    if (!requestQuery.sites) requestQuery.sites = [];
+    if (!requestQuery.years) requestQuery.years = [];
+
+    // Get all state conditions
+    const conditionsStates = `(${requestQuery.states
+      .filter((state) => {
+        return state !== 'N/A';
+      })
+      .map((state) => {
+        return `'${state}'`;
+      })
+      .join(', ')})`;
+    if (requestQuery.states.includes('N/A')) {
+      conditionsNullCheck.states = 'area.area_state IS NULL';
+    }
+
+    // Get all grades conditions
+    const conditionsGrades = `(${requestQuery.grades
+      .map((grade) => {
+        return `${grade}`;
+      })
+      .join(', ')})`;
+
+    const conditionsAreas = `(${requestQuery.areas
+      .filter((areas) => {
+        return areas !== 'No assigned area';
+      })
+      .map((areas) => {
+        return `'${areas}'`;
+      })
+      .join(', ')})`;
+    if (requestQuery.areas.includes('No assigned area')) {
+      conditionsNullCheck.areas = 'area.area_name IS NULL';
+    }
+
+    // Get all site conditions
+    const conditionsSites = `(${requestQuery.sites
+      .filter((site) => {
+        return site !== 'No assigned site';
+      })
+      .map((site) => {
+        return `'${site.split("'").join("''")}'`;
+      })
+      .join(', ')})`;
+    if (requestQuery.sites.includes('No assigned site')) {
+      conditionsNullCheck.sites = 'site.site_name IS NULL';
+    }
+
+    // Get all cycle conditions
+    const conditionsYears = `(${requestQuery.years
+      .filter((year) => {
+        return year !== 'N/A';
+      })
+      .map((year) => {
+        return `${year}`;
+      })
+      .join(', ')})`;
+    if (requestQuery.years.includes('N/A')) {
+      conditionsNullCheck.years = 'student_group.year IS NULL';
+    }
+
+    let students = [];
+    if (
+      conditionsStates !== '()' &&
+      conditionsAreas !== '()' &&
+      conditionsGrades !== '()' &&
+      conditionsSites !== '()' &&
+      conditionsYears !== '()'
+    ) {
+      const q = studentsQuery(
+        `WHERE (${[
+          `(area.area_state IN ${conditionsStates}${
+            conditionsNullCheck.states !== '' ? ` OR ${conditionsNullCheck.states})` : ')'
+          }`,
+          `(area.area_name IN ${conditionsAreas}${
+            conditionsNullCheck.areas !== '' ? ` OR ${conditionsNullCheck.areas})` : ')'
+          }`,
+          `(student.grade IN ${conditionsGrades})`,
+          `(site.site_name IN ${conditionsSites}${
+            conditionsNullCheck.sites !== '' ? ` OR ${conditionsNullCheck.sites})` : ')'
+          }`,
+          `(student_group.year IN ${conditionsYears}${
+            conditionsNullCheck.years !== '' ? ` OR ${conditionsNullCheck.years})` : ')'
+          }`,
+        ].join(' AND ')})`,
+      );
+      students = await pool.query(q);
+    } else {
+      // This is based on the current filter in the /people route --> if any of the filters are not set --> no data will display
+      students = { rows: [] };
+    }
+
+    // Get percentages for the grade of filtered students
+    const gradePercentage = [1, 2, 3, 4, 5, 6].map((grade) => {
+      if (students.rows.length === 0) {
+        return 0.0;
+      }
+      return (
+        students.rows.filter((student) => {
+          return student.grade === grade;
+        }).length / students.rows.length
+      );
+    });
+
+    // Get percentages for the ethnicity of filtered students
+    const ethnicityPercentage = [
+      'white',
+      'black',
+      'asian',
+      'latinx',
+      'american indian or alaska native',
+      'non-specified',
+    ].map((ethnicity) => {
+      if (students.rows.length === 0) {
+        return 0.0;
+      }
+      return (
+        students.rows.filter((student) => {
+          if (ethnicity === 'non-specified') {
+            return student.ethnicity.length === 0 || student.ethnicity.includes(ethnicity);
+          }
+          return student.ethnicity.includes(ethnicity);
+        }).length / students.rows.length
+      );
+    });
+
+    // Get percentages for the gender of filtered students
+    const genderPercentage = ['male', 'female', 'non-specified'].map((gender) => {
+      if (students.rows.length === 0) {
+        return 0.0;
+      }
+      return (
+        students.rows.filter((student) => {
+          return student.gender === gender;
+        }).length / students.rows.length
+      );
+    });
+
+    // Response object
+    const response = {
+      Grade: gradePercentage,
+      Ethnicity: ethnicityPercentage,
+      Gender: genderPercentage,
+    };
+
+    res.status(200).json(keysToCamel(response));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // create a student
 router.post('/', async (req, res) => {
   try {
