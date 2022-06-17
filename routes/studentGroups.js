@@ -11,7 +11,10 @@ const getStudentGroups = (conditions = '') =>
                       array_agg(json_build_object('student_id', s.student_id,
                                                   'first_name', s.first_name,
                                                   'last_name', s.last_name,
-                                                  'pretest_r', s.pretest_r,
+                                                  'ethnicity', s.ethnicity,
+                                                  'grade', s.grade,
+                                                  'home_teacher', s.home_teacher,
+                                                  'gender', s.gender,                                                  'pretest_r', s.pretest_r,
                                                   'posttest_r', s.posttest_r,
                                                   'pretest_a', s.pretest_a,
                                                   'posttest_a', s.posttest_a)
